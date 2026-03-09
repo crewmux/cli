@@ -1,6 +1,6 @@
 # Troubleshooting
 
-## `No active team session. Run 'ai team start' first.`
+## `No active team session. Run 'cm team start' first.`
 
 가장 흔한 원인은 현재 디렉토리가 세션을 시작한 프로젝트 폴더와 다르기 때문입니다.
 
@@ -8,20 +8,20 @@
 
 ```bash
 cd /path/to/original/project
-ai ctl status
+cm ctl status
 ```
 
 또는 명시적으로:
 
 ```bash
-ai team attach /path/to/original/project
+cm team attach /path/to/original/project
 ```
 
-`ai task *`와 `ai ctl *`는 현재 작업 디렉토리에서 세션 이름을 계산합니다.
+`cm task *`와 `cm ctl *`는 현재 작업 디렉토리에서 세션 이름을 계산합니다.
 
 ## `tmux`가 없다고 나옴
 
-`ai`는 tmux를 직접 호출합니다. 먼저 tmux가 shell에서 실행되는지 확인하세요.
+`CrewMux`는 tmux를 직접 호출합니다. 먼저 tmux가 shell에서 실행되는지 확인하세요.
 
 ```bash
 tmux -V
@@ -45,12 +45,12 @@ brew install tmux
 claude --help
 ```
 
-필요하면 Claude CLI 설치 후 다시 `ai team start -t claude`를 실행하세요. Codex만 쓸 거라면 `ai team start -t codex`로 시작하면 됩니다.
+필요하면 Claude CLI 설치 후 다시 `cm team start -t claude`를 실행하세요. Codex만 쓸 거라면 `cm team start -t codex`로 시작하면 됩니다.
 
 기본 installer는 Claude CLI도 자동 설치하려고 시도합니다. Claude만 설치하고 싶으면:
 
 ```bash
-AI_INSTALL_AGENTS=claude ./install.sh
+CM_INSTALL_AGENTS=claude ./install.sh
 ```
 
 ## Codex 워커만 안 뜸
@@ -66,7 +66,7 @@ codex --help
 Codex만 설치하려면:
 
 ```bash
-AI_INSTALL_AGENTS=codex ./install.sh
+CM_INSTALL_AGENTS=codex ./install.sh
 ```
 
 ## 웹 대시보드는 뜨는데 세션 생성이 실패함
@@ -80,19 +80,19 @@ AI_INSTALL_AGENTS=codex ./install.sh
 먼저 서비스 로그를 확인하세요.
 
 ```bash
-tail -n 100 ~/.ai-team/service/stdout.log
-tail -n 100 ~/.ai-team/service/stderr.log
+tail -n 100 ~/.crewmux/service/stdout.log
+tail -n 100 ~/.crewmux/service/stderr.log
 ```
 
-## `ai install` 후 서비스에서만 `claude`/`codex`를 못 찾음
+## `cm install` 후 서비스에서만 `claude`/`codex`를 못 찾음
 
 `launchd`는 셸과 다른 환경변수를 씁니다. 현재 plist에는 일반적인 Homebrew/사용자 경로를 넣어두지만, 실제 설치 경로가 다르면 서비스에서 바이너리를 못 찾을 수 있습니다.
 
 확인 순서:
 
 1. 터미널에서 `which claude`, `which codex`
-2. [`src/cmd/service.rs`](/Users/ko/Documents/project/ai-ctl/src/cmd/service.rs) 의 PATH 구성 확인
-3. 필요하면 `ai uninstall` 후 경로를 맞춘 상태에서 `ai install`
+2. [`src/cmd/service.rs`](/Users/ko/Documents/code/opensource/cli/src/cmd/service.rs) 의 PATH 구성 확인
+3. 필요하면 `cm uninstall` 후 경로를 맞춘 상태에서 `cm install`
 
 `install.sh`가 `~/.npm-global/bin` 같은 사용자 경로를 추가로 사용했다면, 해당 경로가 launchd PATH에도 들어가야 합니다.
 
@@ -101,10 +101,10 @@ tail -n 100 ~/.ai-team/service/stderr.log
 수동 실행 시 다른 포트를 사용하세요.
 
 ```bash
-ai web -p 8080
+cm web -p 8080
 ```
 
-서비스 설치(`ai install`)는 현재 고정 포트 `7700`을 사용합니다.
+서비스 설치(`cm install`)는 현재 고정 포트 `7700`을 사용합니다.
 
 ## 세션 카드가 비어 있는데 Recent Projects는 보임
 
@@ -116,37 +116,37 @@ ai web -p 8080
 ## 로그와 메타데이터 위치를 모르겠음
 
 ```text
-~/.ai-team/tasks/<session>/meta.json
-~/.ai-team/logs/<session>.log
-~/.ai-team/service/stdout.log
-~/.ai-team/service/stderr.log
+~/.crewmux/tasks/<session>/meta.json
+~/.crewmux/logs/<session>.log
+~/.crewmux/service/stdout.log
+~/.crewmux/service/stderr.log
 ```
 
 문제가 생기면 보통 아래 순서로 보면 됩니다.
 
-1. `ai ctl status`
-2. `ai ctl roles`
-3. `ai ctl peek master -l 100`
-4. `ai ctl log -f`
+1. `cm ctl status`
+2. `cm ctl roles`
+3. `cm ctl peek master -l 100`
+4. `cm ctl log -f`
 
 ## pane을 tmux에서 직접 닫은 뒤 상태가 이상함
 
-`ai`는 tmux 상태와 `meta.json`을 같이 사용합니다. pane을 외부에서 직접 닫으면 메타데이터가 즉시 정리되지 않을 수 있습니다.
+`CrewMux`는 tmux 상태와 `meta.json`을 같이 사용합니다. pane을 외부에서 직접 닫으면 메타데이터가 즉시 정리되지 않을 수 있습니다.
 
 가장 안전한 정리 방법:
 
 ```bash
-ai ctl kill-workers
-ai team stop
-ai team start
+cm ctl kill-workers
+cm team stop
+cm team start
 ```
 
 ## master가 워커 충돌을 자꾸 냄
 
-기본적으로 `ai`는 conflict-avoidance master prompt를 자동 생성해 사용합니다. 그래도 운영 규칙을 더 강하게 바꾸고 싶으면 아래 파일을 수정하세요.
+기본적으로 `CrewMux`는 conflict-avoidance master prompt를 자동 생성해 사용합니다. 그래도 운영 규칙을 더 강하게 바꾸고 싶으면 아래 파일을 수정하세요.
 
 ```bash
-open ~/.ai-team/master-prompt.md
+open ~/.crewmux/master-prompt.md
 ```
 
 추천 규칙은 [Orchestration Guide](./orchestration-guide.md)에 정리돼 있습니다.

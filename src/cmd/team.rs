@@ -51,7 +51,7 @@ fn cmd_start(dir: Option<String>, master_type: String, master_model: Option<Stri
         Some(d) => std::fs::canonicalize(&d)?.to_string_lossy().to_string(),
         None => std::env::current_dir()?.to_string_lossy().to_string(),
     };
-    let session = meta::session_name(&project_dir);
+    let session = meta::resolve_session_name(&project_dir);
 
     if tmux::has_session(&session) {
         println!(
@@ -63,7 +63,7 @@ fn cmd_start(dir: Option<String>, master_type: String, master_model: Option<Stri
 
     println!(
         "{} for {}",
-        "Starting AI Team".green().bold(),
+        "Starting CrewMux".green().bold(),
         project_dir.cyan()
     );
     println!("Session: {}", session.bold());
@@ -134,11 +134,11 @@ fn cmd_start(dir: Option<String>, master_type: String, master_model: Option<Stri
     println!();
     println!(
         "  {} \"your task\"    Spawn workers",
-        "ai task spawn".bold()
+        "cm task spawn".bold()
     );
     println!(
         "  {}               Check team status",
-        "ai ctl status".bold()
+        "cm ctl status".bold()
     );
     println!();
 
@@ -153,11 +153,11 @@ fn cmd_stop(dir: Option<String>) -> Result<()> {
         Some(d) => std::fs::canonicalize(&d)?.to_string_lossy().to_string(),
         None => std::env::current_dir()?.to_string_lossy().to_string(),
     };
-    let session = meta::session_name(&project_dir);
+    let session = meta::resolve_session_name(&project_dir);
 
     if tmux::has_session(&session) {
         tmux::kill_session(&session)?;
-        let _ = std::fs::remove_dir_all(meta::tasks_dir().join(&session));
+        let _ = std::fs::remove_dir_all(meta::session_task_dir(&session));
         println!("{}", format!("Stopped: {}", session).green());
     } else {
         println!("{}", format!("No active session: {}", session).red());
@@ -168,12 +168,12 @@ fn cmd_stop(dir: Option<String>) -> Result<()> {
 fn cmd_stop_all() -> Result<()> {
     let sessions = tmux::list_sessions_raw()?;
     if sessions.is_empty() {
-        println!("{}", "No active AI team sessions.".red());
+        println!("{}", "No active CrewMux sessions.".red());
         return Ok(());
     }
     for s in sessions {
         tmux::kill_session(&s)?;
-        let _ = std::fs::remove_dir_all(meta::tasks_dir().join(&s));
+        let _ = std::fs::remove_dir_all(meta::session_task_dir(&s));
         println!("{}", format!("Stopped: {}", s).green());
     }
     Ok(())
@@ -182,10 +182,10 @@ fn cmd_stop_all() -> Result<()> {
 fn cmd_list() -> Result<()> {
     let sessions = tmux::list_sessions_raw()?;
     if sessions.is_empty() {
-        println!("{}", "No active AI team sessions.".red());
+        println!("{}", "No active CrewMux sessions.".red());
         return Ok(());
     }
-    println!("{}", "Active AI Teams:".bold());
+    println!("{}", "Active CrewMux Sessions:".bold());
     println!();
     for s in sessions {
         if let Ok(m) = meta::load_meta(&s) {
@@ -203,12 +203,12 @@ fn cmd_attach(dir: Option<String>) -> Result<()> {
         Some(d) => std::fs::canonicalize(&d)?.to_string_lossy().to_string(),
         None => std::env::current_dir()?.to_string_lossy().to_string(),
     };
-    let session = meta::session_name(&project_dir);
+    let session = meta::resolve_session_name(&project_dir);
 
     if tmux::has_session(&session) {
         tmux::attach(&session)?;
     } else {
-        println!("{}", "No active session. Run 'ai team start' first.".red());
+        println!("{}", "No active session. Run 'cm team start' first.".red());
     }
     Ok(())
 }

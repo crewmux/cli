@@ -186,7 +186,7 @@ pub fn list_sessions_raw() -> Result<Vec<String>> {
     match tmux(&["list-sessions", "-F", "#S"]) {
         Ok(out) => Ok(out
             .lines()
-            .filter(|l| l.starts_with("ai-"))
+            .filter(|l| l.starts_with("cm-") || l.starts_with("ai-"))
             .map(String::from)
             .collect()),
         Err(_) => Ok(vec![]),

@@ -13,6 +13,14 @@ pub fn master_prompt_path() -> PathBuf {
 
 pub fn ensure_default_master_prompt() -> Result<PathBuf> {
     let path = master_prompt_path();
+    let legacy_path = meta::legacy_team_dir().join("master-prompt.md");
+
+    if !path.exists() && legacy_path.exists() {
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        fs::copy(&legacy_path, &path)?;
+    }
 
     let needs_bootstrap = match fs::read_to_string(&path) {
         Ok(content) => {

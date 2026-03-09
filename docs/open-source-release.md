@@ -1,6 +1,6 @@
 # Open Source Release
 
-이 문서는 `ai`를 공개 저장소로 다듬을 때 필요한 체크리스트를 정리합니다.
+이 문서는 `CrewMux`를 공개 저장소로 다듬을 때 필요한 체크리스트를 정리합니다.
 
 ## 최소 공개 기준
 
@@ -31,27 +31,7 @@
 
 ## 네이밍 메모
 
-현재 내부 이름은 `ai-ctl` / `ai` / `com.ai-ctl.web` 입니다. 공개용으로는 조금 더 제품적인 이름이 읽기 쉽습니다.
-
-추천 후보:
-
-1. `CrewMux`
-2. `PanePilot`
-3. `TaskMux`
-4. `OrbitPane`
-5. `MuxOps`
-
-가장 추천하는 방향:
-
-- 제품명: `CrewMux`
-- CLI: `crewmux` 또는 계속 `ai`
-- macOS 서비스 label: `com.crewmux.web`
-
-이유:
-
-- tmux 기반 multi-agent 운영이라는 성격이 바로 드러남
-- 지나치게 일반적인 `ai`보다 검색성과 충돌 회피가 좋음
-- launchd label도 자연스럽게 이어짐
+현재 이름은 `crewmux` / `cm` / `com.crewmux.web` 로 정리됐고, 기존 `ai`는 호환용 별칭으로만 유지됩니다.
 
 ## 이름 확정 후 바꿔야 할 곳
 

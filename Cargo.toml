@@ -1,11 +1,12 @@
 [package]
-name = "ai-ctl"
+name = "crewmux"
 version = "0.1.0"
 edition = "2021"
-description = "AI Team Controller - manage AI agent teams via tmux"
+default-run = "cm"
+description = "CrewMux - manage AI agent teams via tmux"
 
 [[bin]]
-name = "ai"
+name = "cm"
 path = "src/main.rs"
 
 [dependencies]

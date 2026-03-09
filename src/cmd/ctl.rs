@@ -60,9 +60,9 @@ pub fn run(action: CtlAction) -> Result<()> {
 }
 
 fn ensure_session() -> Result<String> {
-    let session = meta::session_name_cwd();
+    let session = meta::resolve_session_name_cwd();
     if !tmux::has_session(&session) {
-        bail!("No active team session. Run 'ai team start' first.");
+        bail!("No active team session. Run 'cm team start' first.");
     }
     Ok(session)
 }
@@ -71,7 +71,7 @@ fn cmd_status() -> Result<()> {
     let session = ensure_session()?;
     let m = meta::load_meta(&session)?;
 
-    println!("{}", "AI Team Status".bold());
+    println!("{}", "CrewMux Status".bold());
     println!("{}", "─".repeat(50).dimmed());
     println!("  Session:  {}", m.session.cyan());
     println!("  Project:  {}", m.project);
@@ -99,7 +99,7 @@ fn cmd_status() -> Result<()> {
         println!();
         println!(
             "  {}",
-            "No workers spawned yet. Use 'ai task spawn' to dispatch.".dimmed()
+            "No workers spawned yet. Use 'cm task spawn' to dispatch.".dimmed()
         );
     } else {
         println!();
@@ -120,9 +120,9 @@ fn cmd_status() -> Result<()> {
 
     println!();
     println!("{}", "─".repeat(50).dimmed());
-    println!("  {} <name> \"msg\"   Send to agent", "ai ctl send".bold());
-    println!("  {} <name>          View output", "ai ctl peek".bold());
-    println!("  {}                List all agents", "ai ctl roles".bold());
+    println!("  {} <name> \"msg\"   Send to agent", "cm ctl send".bold());
+    println!("  {} <name>          View output", "cm ctl peek".bold());
+    println!("  {}                List all agents", "cm ctl roles".bold());
 
     Ok(())
 }
@@ -161,7 +161,7 @@ fn cmd_roles() -> Result<()> {
 
 fn cmd_send(target: String, message: String) -> Result<()> {
     if message.is_empty() {
-        bail!("Usage: ai ctl send <name> \"message\"");
+        bail!("Usage: cm ctl send <name> \"message\"");
     }
     let session = ensure_session()?;
     let m = meta::load_meta(&session)?;
@@ -172,7 +172,7 @@ fn cmd_send(target: String, message: String) -> Result<()> {
             meta::append_log(&session, &format!("REMOTE [{}] {}", target, message))?;
             println!("{}", format!("Sent to {}.", target).green());
         }
-        None => bail!("Unknown: {}. Use 'ai ctl roles'.", target),
+        None => bail!("Unknown: {}. Use 'cm ctl roles'.", target),
     }
     Ok(())
 }
@@ -194,7 +194,7 @@ fn cmd_peek(target: String, lines: u32) -> Result<()> {
 }
 
 fn cmd_log(follow: bool) -> Result<()> {
-    let session = meta::session_name_cwd();
+    let session = meta::resolve_session_name_cwd();
     let log_file = meta::log_path(&session);
 
     if !log_file.exists() {
@@ -217,7 +217,7 @@ fn cmd_log(follow: bool) -> Result<()> {
 
 fn cmd_broadcast(message: String) -> Result<()> {
     if message.is_empty() {
-        bail!("Usage: ai ctl broadcast \"msg\"");
+        bail!("Usage: cm ctl broadcast \"msg\"");
     }
     let session = ensure_session()?;
     let m = meta::load_meta(&session)?;

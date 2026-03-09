@@ -42,7 +42,7 @@ pub async fn serve(port: u16) -> anyhow::Result<()> {
         .route("/api/recents", get(api_recents));
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port)).await?;
-    eprintln!("AI Team Web UI: http://localhost:{}", port);
+    eprintln!("CrewMux dashboard: http://localhost:{}", port);
     axum::serve(listener, app).await?;
     Ok(())
 }
@@ -231,7 +231,7 @@ async fn api_create_session(
     let master_type = req.master_type.clone().unwrap_or_else(|| "claude".into());
     let master_model = req.master_model.clone();
 
-    let session = meta::session_name(&project_dir);
+    let session = meta::resolve_session_name(&project_dir);
 
     if tmux::has_session(&session) {
         return Ok(Json(ApiResult {
@@ -243,7 +243,7 @@ async fn api_create_session(
 
     // Create directories
     std::fs::create_dir_all(meta::logs_dir()).map_err(err500)?;
-    std::fs::create_dir_all(meta::tasks_dir().join(&session)).map_err(err500)?;
+    std::fs::create_dir_all(meta::session_task_dir(&session)).map_err(err500)?;
 
     // Create tmux session
     tmux::new_session(&session, &project_dir).map_err(err500)?;
@@ -311,7 +311,7 @@ async fn api_stop_session(
     if tmux::has_session(&session) {
         tmux::kill_session(&session).map_err(err500)?;
     }
-    let _ = std::fs::remove_dir_all(meta::tasks_dir().join(&session));
+    let _ = std::fs::remove_dir_all(meta::session_task_dir(&session));
 
     Ok(Json(ApiResult {
         ok: true,
@@ -324,7 +324,7 @@ async fn api_stop_all() -> Result<Json<ApiResult>, ApiError> {
     let sessions = tmux::list_sessions_raw().unwrap_or_default();
     for s in &sessions {
         let _ = tmux::kill_session(s);
-        let _ = std::fs::remove_dir_all(meta::tasks_dir().join(s));
+        let _ = std::fs::remove_dir_all(meta::session_task_dir(s));
     }
     Ok(Json(ApiResult {
         ok: true,

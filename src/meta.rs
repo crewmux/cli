@@ -1,8 +1,14 @@
+use crate::tmux;
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
+
+const TEAM_DIR_NAME: &str = ".crewmux";
+const LEGACY_TEAM_DIR_NAME: &str = ".ai-team";
+const SESSION_PREFIX: &str = "cm";
+const LEGACY_SESSION_PREFIX: &str = "ai";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TeamMeta {
@@ -35,9 +41,13 @@ pub struct WorkerMeta {
     pub model: Option<String>,
 }
 
-/// ~/.ai-team
+/// ~/.crewmux
 pub fn team_dir() -> PathBuf {
-    dirs::home_dir().unwrap().join(".ai-team")
+    dirs::home_dir().unwrap().join(TEAM_DIR_NAME)
+}
+
+pub fn legacy_team_dir() -> PathBuf {
+    dirs::home_dir().unwrap().join(LEGACY_TEAM_DIR_NAME)
 }
 
 pub fn logs_dir() -> PathBuf {
@@ -48,25 +58,84 @@ pub fn tasks_dir() -> PathBuf {
     team_dir().join("tasks")
 }
 
+pub fn session_task_dir(session: &str) -> PathBuf {
+    session_storage_root(session).join("tasks").join(session)
+}
+
 pub fn session_name(dir: &str) -> String {
+    format!("{}-{}", SESSION_PREFIX, session_basename(dir))
+}
+
+pub fn legacy_session_name(dir: &str) -> String {
+    format!("{}-{}", LEGACY_SESSION_PREFIX, session_basename(dir))
+}
+
+pub fn resolve_session_name(dir: &str) -> String {
+    for session in session_candidates(dir) {
+        if tmux::has_session(&session) {
+            return session;
+        }
+    }
+    session_name(dir)
+}
+
+pub fn resolve_session_name_cwd() -> String {
+    let cwd = std::env::current_dir().unwrap();
+    resolve_session_name(&cwd.to_string_lossy())
+}
+
+pub fn meta_path(session: &str) -> PathBuf {
+    session_task_dir(session).join("meta.json")
+}
+
+pub fn log_path(session: &str) -> PathBuf {
+    session_storage_root(session)
+        .join("logs")
+        .join(format!("{}.log", session))
+}
+
+fn session_basename(dir: &str) -> String {
     let base = std::path::Path::new(dir)
         .file_name()
         .map(|s| s.to_string_lossy().to_string())
         .unwrap_or_else(|| "project".into());
-    format!("ai-{}", base.replace([' ', '.'], "-"))
+    base.replace([' ', '.'], "-")
 }
 
-pub fn session_name_cwd() -> String {
-    let cwd = std::env::current_dir().unwrap();
-    session_name(&cwd.to_string_lossy())
+fn session_candidates(dir: &str) -> [String; 2] {
+    [session_name(dir), legacy_session_name(dir)]
 }
 
-pub fn meta_path(session: &str) -> PathBuf {
-    tasks_dir().join(session).join("meta.json")
-}
+fn session_storage_root(session: &str) -> PathBuf {
+    let current = team_dir();
+    if current
+        .join("tasks")
+        .join(session)
+        .join("meta.json")
+        .exists()
+        || current
+            .join("logs")
+            .join(format!("{}.log", session))
+            .exists()
+    {
+        return current;
+    }
 
-pub fn log_path(session: &str) -> PathBuf {
-    logs_dir().join(format!("{}.log", session))
+    let legacy = legacy_team_dir();
+    if legacy
+        .join("tasks")
+        .join(session)
+        .join("meta.json")
+        .exists()
+        || legacy
+            .join("logs")
+            .join(format!("{}.log", session))
+            .exists()
+    {
+        return legacy;
+    }
+
+    current
 }
 
 pub fn load_meta(session: &str) -> Result<TeamMeta> {
@@ -155,18 +224,25 @@ pub fn next_worker_name(meta: &TeamMeta, worker_type: &str) -> String {
 
 /// List all sessions (directories in tasks_dir that have meta.json)
 pub fn list_sessions() -> Result<Vec<(String, Option<TeamMeta>)>> {
-    let dir = tasks_dir();
-    if !dir.exists() {
-        return Ok(vec![]);
-    }
     let mut sessions = vec![];
-    for entry in fs::read_dir(&dir)? {
-        let entry = entry?;
-        if entry.file_type()?.is_dir() {
-            let name = entry.file_name().to_string_lossy().to_string();
-            let meta = load_meta(&name).ok();
-            sessions.push((name, meta));
+    let mut seen = std::collections::HashSet::new();
+
+    for dir in [tasks_dir(), legacy_team_dir().join("tasks")] {
+        if !dir.exists() {
+            continue;
+        }
+
+        for entry in fs::read_dir(&dir)? {
+            let entry = entry?;
+            if entry.file_type()?.is_dir() {
+                let name = entry.file_name().to_string_lossy().to_string();
+                if seen.insert(name.clone()) {
+                    let meta = load_meta(&name).ok();
+                    sessions.push((name, meta));
+                }
+            }
         }
     }
+
     Ok(sessions)
 }

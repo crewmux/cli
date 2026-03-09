@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# ai-ctl installer — one-line install:
-#   curl -sSL https://raw.githubusercontent.com/YOUR/ai-ctl/main/install.sh | bash
+# CrewMux installer — one-line install:
+#   curl -sSL https://raw.githubusercontent.com/crewmux/cli/main/install.sh | bash
 # or locally:
 #   ./install.sh
 
@@ -13,11 +13,11 @@ if [[ ! -t 0 ]]; then
     NON_INTERACTIVE=1
 fi
 
-WANTED_AGENTS="${AI_INSTALL_AGENTS:-claude,codex}"
-INSTALL_SERVICE_DEFAULT="${AI_INSTALL_SERVICE:-}"
+WANTED_AGENTS="${CM_INSTALL_AGENTS:-${AI_INSTALL_AGENTS:-claude,codex}}"
+INSTALL_SERVICE_DEFAULT="${CM_INSTALL_SERVICE:-${AI_INSTALL_SERVICE:-}}"
 EXTRA_PATHS=()
 
-echo -e "${BOLD}AI Team Controller — Installer${NC}"
+echo -e "${BOLD}CrewMux — Installer${NC}"
 echo ""
 
 info() {
@@ -299,13 +299,13 @@ have git || ensure_system_cmd git git
 if want_agent claude; then
     install_npm_cli claude @anthropic-ai/claude-code
 else
-    warn "Skipping Claude CLI install (AI_INSTALL_AGENTS=$WANTED_AGENTS)"
+    warn "Skipping Claude CLI install (CM_INSTALL_AGENTS=$WANTED_AGENTS)"
 fi
 
 if want_agent codex; then
     install_npm_cli codex @openai/codex
 else
-    warn "Skipping Codex CLI install (AI_INSTALL_AGENTS=$WANTED_AGENTS)"
+    warn "Skipping Codex CLI install (CM_INSTALL_AGENTS=$WANTED_AGENTS)"
 fi
 
 if ! have claude && ! have codex; then
@@ -322,19 +322,21 @@ info "Building release..."
 cd "$SCRIPT_DIR"
 cargo build --release --quiet
 
-# 5. Install binary
+# 5. Install binaries
 INSTALL_DIR="$HOME/.local/bin"
 mkdir -p "$INSTALL_DIR"
-install -m 755 "$SCRIPT_DIR/target/release/ai" "$INSTALL_DIR/ai"
-ok "Installed $INSTALL_DIR/ai"
+install -m 755 "$SCRIPT_DIR/target/release/cm" "$INSTALL_DIR/cm"
+ln -sf "$INSTALL_DIR/cm" "$INSTALL_DIR/ai"
+ok "Installed $INSTALL_DIR/cm"
+ok "Linked $INSTALL_DIR/ai -> $INSTALL_DIR/cm"
 note_extra_path "$INSTALL_DIR"
 
 # 6. Create data directory
-mkdir -p "$HOME/.ai-team"/{logs,tasks,service}
+mkdir -p "$HOME/.crewmux"/{logs,tasks,service}
 
 # 7. Install as background service
 if should_install_service; then
-    "$INSTALL_DIR/ai" install
+    "$INSTALL_DIR/cm" install
 else
     warn "Skipped background service installation"
 fi
@@ -343,10 +345,10 @@ echo ""
 echo -e "${GREEN}${BOLD}Done!${NC}"
 echo ""
 echo -e "  ${BOLD}Quick start:${NC}"
-echo -e "    ${CYAN}ai team start${NC}                        Start a team session"
-echo -e "    ${CYAN}ai task spawn -t codex -m gpt-5.3-codex${NC} \"fix auth\"   Spawn worker"
-echo -e "    ${CYAN}ai ctl status${NC}                        Check status"
-echo -e "    ${CYAN}ai web${NC}                               Open dashboard manually"
+echo -e "    ${CYAN}cm team start${NC}                        Start a team session"
+echo -e "    ${CYAN}cm task spawn -t codex -m gpt-5.3-codex${NC} \"fix auth\"   Spawn worker"
+echo -e "    ${CYAN}cm ctl status${NC}                        Check status"
+echo -e "    ${CYAN}cm web${NC}                               Open dashboard manually"
 echo -e "    ${CYAN}open http://localhost:7700${NC}            Dashboard (if installed as service)"
 
 if ((${#EXTRA_PATHS[@]} > 0)); then

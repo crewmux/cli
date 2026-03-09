@@ -4,18 +4,18 @@
 
 ## Assets
 
-- [Favicon SVG](/Users/ko/Documents/project/ai-ctl/assets/brand/crewmux-favicon.svg)
-- [Favicon PNG](/Users/ko/Documents/project/ai-ctl/assets/brand/crewmux-favicon.png)
-- [Icon SVG](/Users/ko/Documents/project/ai-ctl/assets/brand/crewmux-icon.svg)
-- [Icon PNG](/Users/ko/Documents/project/ai-ctl/assets/brand/crewmux-icon.png)
-- [App Icon SVG](/Users/ko/Documents/project/ai-ctl/assets/brand/crewmux-app-icon.svg)
-- [App Icon PNG](/Users/ko/Documents/project/ai-ctl/assets/brand/crewmux-app-icon.png)
-- [Mascot SVG](/Users/ko/Documents/project/ai-ctl/assets/brand/crewmux-mascot.svg)
-- [Mascot PNG](/Users/ko/Documents/project/ai-ctl/assets/brand/crewmux-mascot.png)
-- [Hero SVG](/Users/ko/Documents/project/ai-ctl/assets/brand/crewmux-hero.svg)
-- [Hero PNG](/Users/ko/Documents/project/ai-ctl/assets/brand/crewmux-hero.png)
-- [Social Card SVG](/Users/ko/Documents/project/ai-ctl/assets/brand/crewmux-social-card.svg)
-- [Social Card PNG](/Users/ko/Documents/project/ai-ctl/assets/brand/crewmux-social-card.png)
+- [Favicon SVG](/Users/ko/Documents/code/opensource/cli/assets/brand/crewmux-favicon.svg)
+- [Favicon PNG](/Users/ko/Documents/code/opensource/cli/assets/brand/crewmux-favicon.png)
+- [Icon SVG](/Users/ko/Documents/code/opensource/cli/assets/brand/crewmux-icon.svg)
+- [Icon PNG](/Users/ko/Documents/code/opensource/cli/assets/brand/crewmux-icon.png)
+- [App Icon SVG](/Users/ko/Documents/code/opensource/cli/assets/brand/crewmux-app-icon.svg)
+- [App Icon PNG](/Users/ko/Documents/code/opensource/cli/assets/brand/crewmux-app-icon.png)
+- [Mascot SVG](/Users/ko/Documents/code/opensource/cli/assets/brand/crewmux-mascot.svg)
+- [Mascot PNG](/Users/ko/Documents/code/opensource/cli/assets/brand/crewmux-mascot.png)
+- [Hero SVG](/Users/ko/Documents/code/opensource/cli/assets/brand/crewmux-hero.svg)
+- [Hero PNG](/Users/ko/Documents/code/opensource/cli/assets/brand/crewmux-hero.png)
+- [Social Card SVG](/Users/ko/Documents/code/opensource/cli/assets/brand/crewmux-social-card.svg)
+- [Social Card PNG](/Users/ko/Documents/code/opensource/cli/assets/brand/crewmux-social-card.png)
 
 ## Concept
 

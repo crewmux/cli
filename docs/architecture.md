@@ -2,11 +2,11 @@
 
 ## 개요
 
-`ai`는 tmux를 런타임으로 삼고, 파일시스템의 `meta.json`을 상태 저장소로 쓰는 단일 Rust 바이너리입니다. CLI, 웹 UI, 백그라운드 서비스가 모두 같은 메타데이터와 tmux 세션을 바라보므로 별도 DB나 서버 사이드 상태가 없습니다.
+`CrewMux`는 tmux를 런타임으로 삼고, 파일시스템의 `meta.json`을 상태 저장소로 쓰는 단일 Rust 바이너리입니다. 기본 바이너리는 `cm`이고, `ai`는 호환용 별칭입니다. CLI, 웹 UI, 백그라운드 서비스가 모두 같은 메타데이터와 tmux 세션을 바라보므로 별도 DB나 서버 사이드 상태가 없습니다.
 
 ```text
 ┌──────────────────────────────────────────────┐
-│ ai (single binary)                          │
+│ cm (single binary)                          │
 │  ├─ team  -> tmux session lifecycle         │
 │  ├─ task  -> worker spawn + dispatch        │
 │  ├─ ctl   -> inspect / send / interrupt     │
@@ -15,17 +15,17 @@
 └──────────────────────────────────────────────┘
                  │
                  ├─ tmux sessions / panes
-                 └─ ~/.ai-team/{tasks,logs,service}
+                 └─ ~/.crewmux/{tasks,logs,service}
 ```
 
 ## 런타임 흐름
 
 ### 1. 팀 시작
 
-`ai team start`는 아래 순서로 동작합니다.
+`cm team start`는 아래 순서로 동작합니다.
 
 1. 프로젝트 디렉토리 canonicalize
-2. 세션 이름 계산: `ai-<basename>`
+2. 세션 이름 계산: `cm-<basename>`
 3. tmux 세션 생성
 4. `master` pane title 설정 후 선택된 provider 실행
 5. `log` pane 생성 후 로그 tail
@@ -35,7 +35,7 @@
 
 ### 2. 워커 스폰
 
-`ai task spawn` 또는 `POST /api/spawn`은 아래를 수행합니다.
+`cm task spawn` 또는 `POST /api/spawn`은 아래를 수행합니다.
 
 1. 현재 메타데이터 로드
 2. 다음 worker 이름 계산 (`claude-1`, `codex-1` ...)
@@ -59,7 +59,7 @@
 ```text
 src/
 ├── main.rs          # clap 진입점
-├── meta.rs          # ~/.ai-team/* 경로와 메타데이터 직렬화
+├── meta.rs          # ~/.crewmux/* 경로와 메타데이터 직렬화
 ├── prompt.rs        # 기본 master prompt bootstrap
 ├── tmux.rs          # tmux CLI wrapper
 ├── cmd/
@@ -82,7 +82,7 @@ assets/
 ### 파일 구조
 
 ```text
-~/.ai-team/
+~/.crewmux/
 ├── tasks/<session>/meta.json
 ├── logs/<session>.log
 ├── service/stdout.log
@@ -138,18 +138,18 @@ window 1: team
 
 - 세션 컨텍스트는 현재 작업 디렉토리에서 계산됩니다
 - master agent 타입과 모델은 세션 생성 시 선택할 수 있습니다
-- master는 기본 conflict-avoidance prompt를 사용하며, 사용자가 `~/.ai-team/master-prompt.md`를 수정해 override할 수 있습니다
+- master는 기본 conflict-avoidance prompt를 사용하며, 사용자가 `~/.crewmux/master-prompt.md`를 수정해 override할 수 있습니다
 - 예전 기본 prompt는 `.legacy.bak`로 백업 후 최신 템플릿으로 교체됩니다
 - 서비스 설치는 macOS `launchd`만 지원합니다
-- `stop-all`은 이름이 `ai-`로 시작하는 tmux 세션 전체를 대상으로 합니다
+- `stop-all`은 이름이 `cm-` 또는 legacy `ai-`로 시작하는 tmux 세션 전체를 대상으로 합니다
 - API와 CLI 모두 tmux가 실제 상태 저장소 역할을 하기 때문에, pane을 외부에서 수동 조작하면 메타데이터와 어긋날 수 있습니다
 
 ## 확장 포인트
 
 새 에이전트 타입을 추가하려면 최소한 아래 세 곳을 맞춰야 합니다.
 
-1. [`src/cmd/task.rs`](/Users/ko/Documents/project/ai-ctl/src/cmd/task.rs) 의 CLI 실행 문자열 생성
-2. [`src/web/mod.rs`](/Users/ko/Documents/project/ai-ctl/src/web/mod.rs) 의 `api_spawn`
-3. [`static/index.html`](/Users/ko/Documents/project/ai-ctl/static/index.html) 의 spawn 타입 UI
+1. [`src/cmd/task.rs`](/Users/ko/Documents/code/opensource/cli/src/cmd/task.rs) 의 CLI 실행 문자열 생성
+2. [`src/web/mod.rs`](/Users/ko/Documents/code/opensource/cli/src/web/mod.rs) 의 `api_spawn`
+3. [`static/index.html`](/Users/ko/Documents/code/opensource/cli/static/index.html) 의 spawn 타입 UI
 
 추가로 provider를 늘리거나 orchestration 규칙을 바꾸면 `assets/master-prompt.md`, `src/prompt.rs`, 설치 문서, 웹 UI 모델 목록을 함께 맞춰야 합니다.

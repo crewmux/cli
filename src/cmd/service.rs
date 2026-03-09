@@ -3,7 +3,7 @@ use colored::*;
 use std::fs;
 use std::path::PathBuf;
 
-const LABEL: &str = "com.ai-ctl.web";
+const LABEL: &str = "com.crewmux.web";
 
 fn plist_path() -> PathBuf {
     dirs::home_dir()
@@ -12,16 +12,16 @@ fn plist_path() -> PathBuf {
         .join(format!("{}.plist", LABEL))
 }
 
-fn ai_binary_path() -> Result<PathBuf> {
+fn cm_binary_path() -> Result<PathBuf> {
     std::env::current_exe().context("Cannot determine binary path")
 }
 
 fn log_dir() -> PathBuf {
-    dirs::home_dir().unwrap().join(".ai-team/service")
+    dirs::home_dir().unwrap().join(".crewmux/service")
 }
 
 pub fn install() -> Result<()> {
-    let bin = ai_binary_path()?;
+    let bin = cm_binary_path()?;
     let plist = plist_path();
     let logs = log_dir();
 
@@ -78,7 +78,7 @@ pub fn install() -> Result<()> {
     if status.success() {
         println!(
             "{}",
-            "AI Team Web UI installed as background service."
+            "CrewMux dashboard installed as background service."
                 .green()
                 .bold()
         );
@@ -89,7 +89,7 @@ pub fn install() -> Result<()> {
         println!("  Logs:       {}", logs.display().to_string().dimmed());
         println!();
         println!("  Starts automatically on login.");
-        println!("  Uninstall:  {}", "ai uninstall".bold());
+        println!("  Uninstall:  {}", "cm uninstall".bold());
     } else {
         println!("{}", "Failed to load service.".red());
     }
@@ -111,7 +111,7 @@ pub fn uninstall() -> Result<()> {
 
     fs::remove_file(&plist)?;
 
-    println!("{}", "AI Team Web UI service uninstalled.".green());
+    println!("{}", "CrewMux service uninstalled.".green());
     println!("  Dashboard will no longer start automatically.");
 
     Ok(())

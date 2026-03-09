@@ -1,6 +1,6 @@
 # Orchestration Guide
 
-이 문서는 master가 워커를 어떻게 나눠야 충돌이 적고 생산성이 높은지 설명합니다. 제품 기본값은 `assets/master-prompt.md`에 들어 있으며, 첫 master 실행 시 `~/.ai-team/master-prompt.md`로 bootstrap 됩니다.
+이 문서는 master가 워커를 어떻게 나눠야 충돌이 적고 생산성이 높은지 설명합니다. 제품 기본값은 `assets/master-prompt.md`에 들어 있으며, 첫 master 실행 시 `~/.crewmux/master-prompt.md`로 bootstrap 됩니다.
 
 ## 기본 원칙
 

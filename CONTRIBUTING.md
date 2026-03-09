@@ -1,6 +1,6 @@
 # Contributing
 
-`ai`는 tmux 세션, 파일시스템 메타데이터, 웹 UI가 동시에 맞물리는 도구라서 작은 수정도 런타임/문서/UI를 같이 보는 편이 안전합니다. PR은 "작동", "문서 반영", "검증 가능성" 세 가지를 함께 만족시키는 방향을 기본으로 합니다.
+`CrewMux`는 tmux 세션, 파일시스템 메타데이터, 웹 UI가 동시에 맞물리는 도구라서 작은 수정도 런타임/문서/UI를 같이 보는 편이 안전합니다. PR은 "작동", "문서 반영", "검증 가능성" 세 가지를 함께 만족시키는 방향을 기본으로 합니다.
 
 ## 로컬 개발 환경
 
@@ -21,8 +21,8 @@
 특정 provider만 원하면:
 
 ```bash
-AI_INSTALL_AGENTS=claude ./install.sh
-AI_INSTALL_AGENTS=codex ./install.sh
+CM_INSTALL_AGENTS=claude ./install.sh
+CM_INSTALL_AGENTS=codex ./install.sh
 ```
 
 ## 작업 원칙
@@ -49,7 +49,7 @@ bash -n install.sh
 ```bash
 cargo build --release
 ./install.sh
-ai web
+cm web
 ```
 
 ## 문서 규칙
@@ -71,6 +71,6 @@ ai web
 
 - `cargo build --release`
 - 설치 스크립트 재실행
-- `ai install` 후 서비스 기동 확인
+- `cm install` 후 서비스 기동 확인
 - `http://localhost:7700`에서 웹 UI 확인
 - 세션 생성, worker spawn, interrupt, kill, open iTerm까지 수동 확인
