@@ -3,7 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Team Controller</title>
+<title>CrewMux Console</title>
+<meta name="theme-color" content="#081222">
+<meta name="description" content="CrewMux console for coordinating tmux-based AI agent teams.">
+<meta property="og:title" content="CrewMux Console">
+<meta property="og:description" content="Dispatch in the browser, reconcile in tmux, work deeply in iTerm.">
+<meta property="og:image" content="/brand/crewmux-social-card.png">
+<link rel="icon" type="image/svg+xml" href="/brand/crewmux-favicon.svg">
+<link rel="apple-touch-icon" href="/brand/crewmux-app-icon.png">
 <style>
   :root {
     --bg: #0b1016;
@@ -51,6 +58,28 @@
     border-bottom: 1px solid rgba(42, 54, 70, 0.7);
     background: rgba(11, 16, 22, 0.88);
     backdrop-filter: blur(18px);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .brand-mark {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid rgba(108, 182, 255, 0.24);
+    box-shadow: 0 10px 26px rgba(10, 20, 34, 0.32);
+    flex: 0 0 auto;
+  }
+
+  .brand-mark img {
+    display: block;
+    width: 100%;
+    height: 100%;
   }
 
   .brand h1 {
@@ -989,8 +1018,13 @@
 
 <div class="topbar">
   <div class="brand">
-    <h1><span>AI</span> Team Desk</h1>
-    <p>Web for dispatch and status, iTerm for deep terminal work.</p>
+    <div class="brand-mark">
+      <img src="/brand/crewmux-icon.svg" alt="CrewMux logo">
+    </div>
+    <div>
+      <h1><span>Crew</span>Mux Console</h1>
+      <p>Dispatch in the browser, reconcile in tmux, work deeply in iTerm.</p>
+    </div>
   </div>
   <div class="top-right">
     <div class="status-chip">

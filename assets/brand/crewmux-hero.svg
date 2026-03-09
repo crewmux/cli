@@ -1,0 +1,98 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="160" y1="96" x2="1454" y2="834" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#081222"/>
+      <stop offset="1" stop-color="#13305F"/>
+    </linearGradient>
+    <radialGradient id="auraA" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(454 282) rotate(90) scale(282 336)">
+      <stop stop-color="#5AA5FF" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#5AA5FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="auraB" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1194 448) rotate(90) scale(320 360)">
+      <stop stop-color="#37D3C6" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#37D3C6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="panelStroke" x1="904" y1="188" x2="1374" y2="696" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5AA5FF"/>
+      <stop offset="1" stop-color="#37D3C6"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="280" y1="498" x2="588" y2="498" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5AA5FF"/>
+      <stop offset="1" stop-color="#37D3C6"/>
+    </linearGradient>
+    <filter id="shadow" x="80" y="80" width="1440" height="740" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="36" stdDeviation="34" flood-color="#050B15" flood-opacity="0.38"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="900" rx="72" fill="#050B15"/>
+  <g filter="url(#shadow)">
+    <rect x="80" y="80" width="1440" height="740" rx="48" fill="url(#bg)"/>
+    <rect x="80" y="80" width="1440" height="740" rx="48" fill="url(#auraA)"/>
+    <rect x="80" y="80" width="1440" height="740" rx="48" fill="url(#auraB)"/>
+  </g>
+
+  <circle cx="1206" cy="224" r="18" fill="#FFB84D" fill-opacity="0.95"/>
+  <circle cx="1294" cy="700" r="26" fill="#37D3C6" fill-opacity="0.85"/>
+  <circle cx="286" cy="204" r="22" fill="#5AA5FF" fill-opacity="0.95"/>
+
+  <rect x="186" y="192" width="212" height="212" rx="54" fill="#07101E"/>
+  <rect x="204" y="210" width="176" height="176" rx="42" fill="#0E1D36"/>
+  <rect x="220" y="226" width="144" height="144" rx="34" fill="#112B57"/>
+  <circle cx="292" cy="298" r="36" fill="#0B1830" stroke="#FFB84D" stroke-width="8"/>
+  <circle cx="292" cy="298" r="12" fill="#FFB84D"/>
+  <path d="M292 248V266" stroke="#FFB84D" stroke-width="7" stroke-linecap="round"/>
+  <path d="M292 330V348" stroke="#FFB84D" stroke-width="7" stroke-linecap="round"/>
+  <path d="M242 298H260" stroke="#5AA5FF" stroke-width="7" stroke-linecap="round"/>
+  <path d="M324 298H342" stroke="#37D3C6" stroke-width="7" stroke-linecap="round"/>
+  <path d="M256 262L268 274" stroke="#5AA5FF" stroke-width="7" stroke-linecap="round"/>
+  <path d="M328 262L316 274" stroke="#5AA5FF" stroke-width="7" stroke-linecap="round"/>
+  <path d="M256 334L268 322" stroke="#37D3C6" stroke-width="7" stroke-linecap="round"/>
+  <path d="M328 334L316 322" stroke="#37D3C6" stroke-width="7" stroke-linecap="round"/>
+
+  <text x="186" y="494" fill="#FFFFFF" font-family="Inter, SF Pro Display, Arial, sans-serif" font-size="112" font-weight="800" letter-spacing="-3.5">CrewMux</text>
+  <text x="186" y="568" fill="#8FB3E7" font-family="Inter, SF Pro Display, Arial, sans-serif" font-size="34" font-weight="600" letter-spacing="1.2">ORCHESTRATION FOR AI TEAMS</text>
+  <rect x="186" y="614" width="404" height="8" rx="4" fill="url(#accent)"/>
+  <text x="186" y="684" fill="#DDEBFF" font-family="Inter, SF Pro Display, Arial, sans-serif" font-size="28" font-weight="500">Dispatch from the browser. Keep terminal control in iTerm.</text>
+  <text x="186" y="730" fill="#DDEBFF" font-family="Inter, SF Pro Display, Arial, sans-serif" font-size="28" font-weight="500">Coordinate specialists without file collisions or duplicate edits.</text>
+
+  <rect x="928" y="182" width="424" height="526" rx="42" fill="#0A162B" stroke="url(#panelStroke)" stroke-width="6"/>
+  <rect x="964" y="220" width="150" height="108" rx="26" fill="#12284A" stroke="#5AA5FF" stroke-width="5"/>
+  <rect x="1166" y="220" width="150" height="108" rx="26" fill="#12284A" stroke="#5AA5FF" stroke-width="5"/>
+  <rect x="964" y="378" width="150" height="108" rx="26" fill="#143052" stroke="#37D3C6" stroke-width="5"/>
+  <rect x="1166" y="378" width="150" height="108" rx="26" fill="#143052" stroke="#37D3C6" stroke-width="5"/>
+
+  <circle cx="1140" cy="354" r="54" fill="#0B1830" stroke="#FFB84D" stroke-width="10"/>
+  <circle cx="1140" cy="354" r="18" fill="#FFB84D"/>
+  <path d="M1140 282V310" stroke="#FFB84D" stroke-width="8" stroke-linecap="round"/>
+  <path d="M1140 398V426" stroke="#FFB84D" stroke-width="8" stroke-linecap="round"/>
+  <path d="M1068 354H1096" stroke="#5AA5FF" stroke-width="8" stroke-linecap="round"/>
+  <path d="M1184 354H1212" stroke="#37D3C6" stroke-width="8" stroke-linecap="round"/>
+  <path d="M1089 303L1108 322" stroke="#5AA5FF" stroke-width="8" stroke-linecap="round"/>
+  <path d="M1191 303L1172 322" stroke="#5AA5FF" stroke-width="8" stroke-linecap="round"/>
+  <path d="M1089 405L1108 386" stroke="#37D3C6" stroke-width="8" stroke-linecap="round"/>
+  <path d="M1191 405L1172 386" stroke="#37D3C6" stroke-width="8" stroke-linecap="round"/>
+
+  <g transform="translate(972 492)">
+    <ellipse cx="170" cy="184" rx="136" ry="22" fill="#173964"/>
+    <path d="M66 102C66 34.621 120.621 -20 188 -20H194C261.379 -20 316 34.621 316 102V120H66V102Z" fill="#0D2040"/>
+    <path d="M118 120H268L244 210H142L118 120Z" fill="#1C4271"/>
+    <ellipse cx="188" cy="0" rx="106" ry="118" fill="#9E6C53"/>
+    <ellipse cx="188" cy="22" rx="84" ry="90" fill="#F7EFEA"/>
+    <path d="M92 -62C92 -108.392 129.608 -146 176 -146H204C250.392 -146 288 -108.392 288 -62V-54H92V-62Z" fill="#4D8AE8"/>
+    <path d="M78 -56H302C302 -31.147 281.853 -11 257 -11H123C98.1472 -11 78 -31.147 78 -56Z" fill="#1F4A87"/>
+    <rect x="152" y="-122" width="72" height="58" rx="18" fill="#FFB84D"/>
+    <rect x="170" y="-104" width="16" height="12" rx="5" fill="#0B1830"/>
+    <rect x="190" y="-104" width="16" height="12" rx="5" fill="#0B1830"/>
+    <rect x="170" y="-84" width="16" height="12" rx="5" fill="#0B1830"/>
+    <rect x="190" y="-84" width="16" height="12" rx="5" fill="#0B1830"/>
+    <ellipse cx="156" cy="-6" rx="16" ry="19" fill="#08142A"/>
+    <ellipse cx="220" cy="-6" rx="16" ry="19" fill="#08142A"/>
+    <ellipse cx="150" cy="-12" rx="4" ry="5" fill="#FFFFFF"/>
+    <ellipse cx="214" cy="-12" rx="4" ry="5" fill="#FFFFFF"/>
+    <ellipse cx="188" cy="26" rx="18" ry="14" fill="#8B5F47"/>
+    <path d="M166 48C176 58 200 58 210 48" stroke="#8B5F47" stroke-width="7" stroke-linecap="round"/>
+    <path d="M110 118C110 103.641 121.641 92 136 92H236C250.359 92 262 103.641 262 118V136H110V118Z" fill="#102643"/>
+    <path d="M124 148C124 128.67 139.67 113 159 113H209C228.33 113 244 128.67 244 148V162H124V148Z" fill="url(#accent)"/>
+  </g>
+</svg>

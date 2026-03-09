@@ -1,0 +1,75 @@
+<svg width="640" height="640" viewBox="0 0 640 640" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="coat" x1="256" y1="304" x2="412" y2="570" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#12284A"/>
+      <stop offset="1" stop-color="#0B1830"/>
+    </linearGradient>
+    <linearGradient id="cap" x1="216" y1="144" x2="418" y2="270" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5AA5FF"/>
+      <stop offset="1" stop-color="#2E6FD6"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="116" y1="392" x2="516" y2="248" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7DB8FF"/>
+      <stop offset="1" stop-color="#37D3C6"/>
+    </linearGradient>
+    <filter id="cardShadow" x="84" y="214" width="472" height="240" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#07101E" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+
+  <rect width="640" height="640" rx="160" fill="#F4F8FF"/>
+  <circle cx="320" cy="314" r="226" fill="#EAF3FF"/>
+  <circle cx="320" cy="314" r="184" fill="#DCEBFF"/>
+
+  <ellipse cx="320" cy="548" rx="154" ry="30" fill="#D8E8FF"/>
+
+  <g filter="url(#cardShadow)">
+    <rect x="128" y="278" width="146" height="98" rx="24" transform="rotate(-10 128 278)" fill="#FFFFFF"/>
+    <rect x="150" y="302" width="102" height="14" rx="7" transform="rotate(-10 150 302)" fill="#CFE1FF"/>
+    <rect x="150" y="330" width="72" height="14" rx="7" transform="rotate(-10 150 330)" fill="#D8FFF8"/>
+
+    <rect x="244" y="236" width="160" height="110" rx="28" fill="#FFFFFF"/>
+    <rect x="268" y="262" width="112" height="16" rx="8" fill="#BFD9FF"/>
+    <rect x="268" y="292" width="82" height="16" rx="8" fill="#D2FFF8"/>
+
+    <rect x="382" y="286" width="126" height="88" rx="22" transform="rotate(10 382 286)" fill="#FFFFFF"/>
+    <rect x="402" y="307" width="88" height="14" rx="7" transform="rotate(10 402 307)" fill="#CBE2FF"/>
+    <rect x="402" y="334" width="58" height="14" rx="7" transform="rotate(10 402 334)" fill="#CFFFF6"/>
+  </g>
+
+  <path d="M206 460C206 383.784 267.784 322 344 322H352C428.216 322 490 383.784 490 460V480H206V460Z" fill="url(#coat)"/>
+  <path d="M264 480H432L404 564H292L264 480Z" fill="#16355A"/>
+  <path d="M292 478C292 458.118 308.118 442 328 442H368C387.882 442 404 458.118 404 478V494H292V478Z" fill="#37D3C6"/>
+
+  <ellipse cx="320" cy="260" rx="126" ry="142" fill="#9B684F"/>
+  <ellipse cx="250" cy="246" rx="26" ry="36" fill="#A8745A"/>
+  <ellipse cx="390" cy="246" rx="26" ry="36" fill="#A8745A"/>
+  <ellipse cx="320" cy="282" rx="102" ry="112" fill="#B77F62"/>
+  <ellipse cx="320" cy="292" rx="86" ry="92" fill="#F7EFEA"/>
+
+  <path d="M212 214C212 159.876 255.876 116 310 116H346C400.124 116 444 159.876 444 214V222H212V214Z" fill="url(#cap)"/>
+  <path d="M188 216H452C452 244.719 428.719 268 400 268H240C211.281 268 188 244.719 188 216Z" fill="#183B70"/>
+  <rect x="278" y="146" width="84" height="66" rx="20" fill="#FFB84D"/>
+  <rect x="296" y="164" width="20" height="14" rx="6" fill="#0B1830"/>
+  <rect x="324" y="164" width="20" height="14" rx="6" fill="#0B1830"/>
+  <rect x="296" y="186" width="20" height="14" rx="6" fill="#0B1830"/>
+  <rect x="324" y="186" width="20" height="14" rx="6" fill="#0B1830"/>
+
+  <ellipse cx="286" cy="278" rx="18" ry="22" fill="#0B1830"/>
+  <ellipse cx="354" cy="278" rx="18" ry="22" fill="#0B1830"/>
+  <ellipse cx="280" cy="272" rx="5" ry="6" fill="#FFFFFF"/>
+  <ellipse cx="348" cy="272" rx="5" ry="6" fill="#FFFFFF"/>
+
+  <ellipse cx="320" cy="310" rx="20" ry="16" fill="#8B5F47"/>
+  <path d="M296 332C307.5 344 332.5 344 344 332" stroke="#8B5F47" stroke-width="8" stroke-linecap="round"/>
+  <path d="M258 326C272 338 292 338 304 326" stroke="#DFAF9A" stroke-width="6" stroke-linecap="round" stroke-opacity="0.7"/>
+  <path d="M336 326C348 338 368 338 382 326" stroke="#DFAF9A" stroke-width="6" stroke-linecap="round" stroke-opacity="0.7"/>
+
+  <path d="M236 406C236 389.431 249.431 376 266 376H374C390.569 376 404 389.431 404 406V426H236V406Z" fill="#102643"/>
+  <rect x="258" y="394" width="124" height="10" rx="5" fill="#1E4377"/>
+  <path d="M250 466C250 439.49 271.49 418 298 418H342C368.51 418 390 439.49 390 466V480H250V466Z" fill="url(#glass)"/>
+
+  <circle cx="150" cy="196" r="14" fill="#5AA5FF" fill-opacity="0.9"/>
+  <circle cx="504" cy="170" r="10" fill="#FFB84D" fill-opacity="0.9"/>
+  <circle cx="514" cy="406" r="16" fill="#37D3C6" fill-opacity="0.88"/>
+</svg>

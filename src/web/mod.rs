@@ -1,17 +1,27 @@
 use axum::{
+    body::Body,
     extract::Query,
-    http::StatusCode,
-    response::{Html, Json},
+    http::{
+        header::{self, HeaderValue},
+        HeaderMap, StatusCode,
+    },
+    response::{Html, IntoResponse, Json},
     routing::{delete, get, post},
     Router,
 };
+use rust_embed::RustEmbed;
 use serde::{Deserialize, Serialize};
 
 use crate::{agent, meta, tmux};
 
+#[derive(RustEmbed)]
+#[folder = "assets/brand"]
+struct BrandAssets;
+
 pub async fn serve(port: u16) -> anyhow::Result<()> {
     let app = Router::new()
         .route("/", get(index))
+        .route("/brand/:asset", get(brand_asset))
         // Session management
         .route("/api/sessions", get(api_sessions))
         .route("/api/sessions/create", post(api_create_session))
@@ -39,6 +49,21 @@ pub async fn serve(port: u16) -> anyhow::Result<()> {
 
 async fn index() -> Html<String> {
     Html(include_str!("../../static/index.html").to_string())
+}
+
+async fn brand_asset(
+    axum::extract::Path(asset): axum::extract::Path<String>,
+) -> Result<impl IntoResponse, StatusCode> {
+    let file = BrandAssets::get(&asset).ok_or(StatusCode::NOT_FOUND)?;
+    let mime = mime_guess::from_path(&asset).first_or_octet_stream();
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        header::CONTENT_TYPE,
+        HeaderValue::from_str(mime.as_ref()).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+    );
+
+    Ok((headers, Body::from(file.data.into_owned())))
 }
 
 // --- API types ---

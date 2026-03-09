@@ -1,0 +1,68 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="80" y1="60" x2="1120" y2="570" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#081222"/>
+      <stop offset="1" stop-color="#143463"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(880 330) rotate(90) scale(250 250)">
+      <stop stop-color="#37D3C6" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#37D3C6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="accent" x1="134" y1="404" x2="470" y2="404" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5AA5FF"/>
+      <stop offset="1" stop-color="#37D3C6"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" rx="44" fill="#050B15"/>
+  <rect x="28" y="28" width="1144" height="574" rx="32" fill="url(#bg)"/>
+  <rect x="28" y="28" width="1144" height="574" rx="32" fill="url(#glow)"/>
+
+  <rect x="96" y="114" width="150" height="150" rx="40" fill="#07101E"/>
+  <rect x="110" y="128" width="122" height="122" rx="30" fill="#112B57"/>
+  <circle cx="171" cy="189" r="30" fill="#0B1830" stroke="#FFB84D" stroke-width="7"/>
+  <circle cx="171" cy="189" r="10" fill="#FFB84D"/>
+  <path d="M171 146V162" stroke="#FFB84D" stroke-width="6" stroke-linecap="round"/>
+  <path d="M171 216V232" stroke="#FFB84D" stroke-width="6" stroke-linecap="round"/>
+  <path d="M128 189H144" stroke="#5AA5FF" stroke-width="6" stroke-linecap="round"/>
+  <path d="M198 189H214" stroke="#37D3C6" stroke-width="6" stroke-linecap="round"/>
+
+  <text x="96" y="346" fill="#FFFFFF" font-family="Inter, SF Pro Display, Arial, sans-serif" font-size="88" font-weight="800" letter-spacing="-3">CrewMux</text>
+  <text x="96" y="398" fill="#A9C7F1" font-family="Inter, SF Pro Display, Arial, sans-serif" font-size="28" font-weight="600" letter-spacing="0.8">ORCHESTRATION FOR AI TEAMS</text>
+  <rect x="96" y="426" width="376" height="7" rx="3.5" fill="url(#accent)"/>
+  <text x="96" y="486" fill="#E1ECFF" font-family="Inter, SF Pro Display, Arial, sans-serif" font-size="25" font-weight="500">Dispatch from browser. Work deeply in tmux panes.</text>
+
+  <rect x="706" y="118" width="370" height="402" rx="32" fill="#0A162B" stroke="#2D6ED2" stroke-width="4"/>
+  <rect x="734" y="146" width="128" height="92" rx="22" fill="#12284A" stroke="#5AA5FF" stroke-width="4"/>
+  <rect x="920" y="146" width="128" height="92" rx="22" fill="#12284A" stroke="#5AA5FF" stroke-width="4"/>
+  <rect x="734" y="282" width="128" height="92" rx="22" fill="#153153" stroke="#37D3C6" stroke-width="4"/>
+  <rect x="920" y="282" width="128" height="92" rx="22" fill="#153153" stroke="#37D3C6" stroke-width="4"/>
+
+  <circle cx="891" cy="260" r="44" fill="#0B1830" stroke="#FFB84D" stroke-width="8"/>
+  <circle cx="891" cy="260" r="14" fill="#FFB84D"/>
+  <path d="M891 202V226" stroke="#FFB84D" stroke-width="7" stroke-linecap="round"/>
+  <path d="M891 294V318" stroke="#FFB84D" stroke-width="7" stroke-linecap="round"/>
+  <path d="M833 260H857" stroke="#5AA5FF" stroke-width="7" stroke-linecap="round"/>
+  <path d="M925 260H949" stroke="#37D3C6" stroke-width="7" stroke-linecap="round"/>
+
+  <g transform="translate(760 384)">
+    <ellipse cx="132" cy="138" rx="106" ry="18" fill="#173964"/>
+    <path d="M54 76C54 21.876 97.876 -22 152 -22H158C212.124 -22 256 21.876 256 76V90H54V76Z" fill="#0D2040"/>
+    <path d="M94 90H222L204 160H112L94 90Z" fill="#1C4271"/>
+    <ellipse cx="158" cy="-16" rx="82" ry="94" fill="#9E6C53"/>
+    <ellipse cx="158" cy="-2" rx="66" ry="72" fill="#F7EFEA"/>
+    <path d="M82 -72C82 -106.794 110.206 -135 145 -135H167C201.794 -135 230 -106.794 230 -72V-66H82V-72Z" fill="#4D8AE8"/>
+    <path d="M70 -68H242C242 -48.117 225.883 -32 206 -32H106C86.1178 -32 70 -48.117 70 -68Z" fill="#1F4A87"/>
+    <rect x="128" y="-118" width="60" height="48" rx="14" fill="#FFB84D"/>
+    <rect x="144" y="-102" width="13" height="10" rx="4" fill="#0B1830"/>
+    <rect x="160" y="-102" width="13" height="10" rx="4" fill="#0B1830"/>
+    <rect x="144" y="-84" width="13" height="10" rx="4" fill="#0B1830"/>
+    <rect x="160" y="-84" width="13" height="10" rx="4" fill="#0B1830"/>
+    <ellipse cx="132" cy="-4" rx="12" ry="15" fill="#08142A"/>
+    <ellipse cx="182" cy="-4" rx="12" ry="15" fill="#08142A"/>
+    <ellipse cx="128" cy="-8" rx="3" ry="4" fill="#FFFFFF"/>
+    <ellipse cx="178" cy="-8" rx="3" ry="4" fill="#FFFFFF"/>
+    <ellipse cx="158" cy="24" rx="15" ry="12" fill="#8B5F47"/>
+    <path d="M139 44C148 53 168 53 177 44" stroke="#8B5F47" stroke-width="6" stroke-linecap="round"/>
+  </g>
+</svg>
