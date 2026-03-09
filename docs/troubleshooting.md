@@ -21,7 +21,7 @@ cm team attach /path/to/original/project
 
 ## `tmux`가 없다고 나옴
 
-`CrewMux`는 tmux를 직접 호출합니다. 먼저 tmux가 shell에서 실행되는지 확인하세요.
+`cm`은 tmux를 직접 호출합니다. 먼저 tmux가 shell에서 실행되는지 확인하세요.
 
 ```bash
 tmux -V
@@ -131,7 +131,7 @@ cm web -p 8080
 
 ## pane을 tmux에서 직접 닫은 뒤 상태가 이상함
 
-`CrewMux`는 tmux 상태와 `meta.json`을 같이 사용합니다. pane을 외부에서 직접 닫으면 메타데이터가 즉시 정리되지 않을 수 있습니다.
+`cm`은 tmux 상태와 `meta.json`을 같이 사용합니다. pane을 외부에서 직접 닫으면 메타데이터가 즉시 정리되지 않을 수 있습니다.
 
 가장 안전한 정리 방법:
 
@@ -143,7 +143,7 @@ cm team start
 
 ## master가 워커 충돌을 자꾸 냄
 
-기본적으로 `CrewMux`는 conflict-avoidance master prompt를 자동 생성해 사용합니다. 그래도 운영 규칙을 더 강하게 바꾸고 싶으면 아래 파일을 수정하세요.
+기본적으로 `cm`은 conflict-avoidance master prompt를 자동 생성해 사용합니다. 그래도 운영 규칙을 더 강하게 바꾸고 싶으면 아래 파일을 수정하세요.
 
 ```bash
 open ~/.crewmux/master-prompt.md

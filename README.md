@@ -1,8 +1,8 @@
-# CrewMux (`cm`)
+# cm
 
 ![CrewMux hero](assets/brand/crewmux-hero.png)
 
-`CrewMux`는 tmux 세션을 기반으로 여러 AI CLI 에이전트를 한 팀처럼 묶어 관리하는 Rust CLI + 웹 대시보드입니다. 기본 명령어는 `cm`이며, 기존 `ai`는 호환용 별칭으로 유지됩니다.
+`cm`은 tmux 세션을 기반으로 여러 AI CLI 에이전트를 한 팀처럼 묶어 관리하는 Rust CLI + 웹 대시보드입니다. 기존 `ai`는 호환용 별칭으로 유지됩니다.
 
 ## 현재 제공 기능
 

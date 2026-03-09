@@ -1,6 +1,6 @@
 # Brand Guide
 
-`CrewMux` 브랜드 기본 자산입니다.
+`cm` 브랜드 기본 자산입니다.
 
 ## Assets
 
