@@ -6,161 +6,1085 @@
 <title>AI Team Controller</title>
 <style>
   :root {
-    --bg: #0d1117; --surface: #161b22; --surface2: #1c2129; --border: #30363d;
-    --text: #e6edf3; --text-dim: #8b949e; --accent: #58a6ff;
-    --green: #3fb950; --red: #f85149; --yellow: #d29922; --cyan: #39d2c0;
-    --purple: #bc8cff; --orange: #f0883e;
+    --bg: #0b1016;
+    --surface: #131b25;
+    --surface2: #182231;
+    --surface3: #0f1620;
+    --border: #2a3646;
+    --text: #e7eef8;
+    --text-dim: #92a0b3;
+    --accent: #6cb6ff;
+    --accent-strong: #3f94ff;
+    --green: #4fd38a;
+    --red: #ff6f6f;
+    --yellow: #e8bd62;
+    --cyan: #38d5cf;
+    --purple: #b58cff;
+    --orange: #ff9a57;
+    --shadow: 0 18px 60px rgba(0, 0, 0, 0.28);
   }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: -apple-system, 'SF Mono', 'Fira Code', monospace; background:var(--bg); color:var(--text); min-height:100vh; }
 
-  /* Topbar */
-  .topbar { display:flex; align-items:center; justify-content:space-between; padding:12px 24px; border-bottom:1px solid var(--border); background:var(--surface); position:sticky; top:0; z-index:10; }
-  .topbar h1 { font-size:16px; font-weight:600; }
-  .topbar h1 span { color:var(--accent); }
-  .top-right { display:flex; align-items:center; gap:16px; }
-  .status-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px; animation: pulse 2s infinite; }
-  .status-dot.on { background:var(--green); }
-  .status-dot.off { background:var(--yellow); }
-  .status-dot.err { background:var(--red); }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at top left, rgba(108, 182, 255, 0.10), transparent 26%),
+      radial-gradient(circle at top right, rgba(56, 213, 207, 0.08), transparent 24%),
+      linear-gradient(180deg, #091018 0%, #0b1016 100%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Fira Code", monospace;
+  }
 
-  .container { max-width:1440px; margin:0 auto; padding:20px; }
+  button, input, select, textarea {
+    font: inherit;
+  }
 
-  /* Session cards row */
-  .sessions-row { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; align-items:center; }
-  .session-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 16px; cursor:pointer; transition:all .15s; min-width:200px; position:relative; }
-  .session-card:hover { border-color:var(--accent); }
-  .session-card.active { border-color:var(--accent); background:rgba(88,166,255,0.06); }
-  .session-card .sc-name { font-weight:600; font-size:14px; color:var(--accent); }
-  .session-card .sc-detail { font-size:11px; color:var(--text-dim); margin-top:4px; }
-  .session-card .sc-workers { font-size:12px; color:var(--green); margin-top:2px; }
-  .session-card .sc-close { position:absolute; top:8px; right:10px; background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:14px; padding:2px 6px; border-radius:4px; }
-  .session-card .sc-close:hover { background:var(--red); color:#fff; }
-  .new-session-card { background:var(--surface); border:2px dashed var(--border); border-radius:10px; padding:12px 16px; cursor:pointer; transition:all .15s; min-width:200px; display:flex; align-items:center; justify-content:center; gap:8px; color:var(--text-dim); font-size:13px; }
-  .new-session-card:hover { border-color:var(--accent); color:var(--accent); }
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 24px;
+    border-bottom: 1px solid rgba(42, 54, 70, 0.7);
+    background: rgba(11, 16, 22, 0.88);
+    backdrop-filter: blur(18px);
+  }
 
-  /* Modal */
-  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:50; align-items:center; justify-content:center; }
-  .modal-overlay.show { display:flex; }
-  .modal { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:28px; width:440px; max-width:90vw; }
-  .modal h2 { font-size:16px; margin-bottom:16px; }
-  .modal input { width:100%; background:var(--bg); color:var(--text); border:1px solid var(--border); padding:10px 14px; border-radius:8px; font-family:inherit; font-size:14px; margin-bottom:12px; }
-  .modal input:focus { outline:none; border-color:var(--accent); }
-  .modal-actions { display:flex; gap:8px; justify-content:flex-end; }
+  .brand h1 {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
 
-  /* Main grid */
-  .grid { display:grid; grid-template-columns:300px 1fr; gap:20px; }
-  @media(max-width:900px) { .grid { grid-template-columns:1fr; } }
+  .brand h1 span {
+    color: var(--accent);
+  }
 
-  /* Panel */
-  .panel { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
-  .panel + .panel { margin-top:14px; }
-  .panel-header { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
-  .panel-header h2 { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-dim); }
-  .panel-body { padding:14px; }
+  .brand p {
+    margin-top: 4px;
+    color: var(--text-dim);
+    font-size: 11px;
+  }
 
-  /* Agent list */
-  .agent { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-radius:8px; margin-bottom:6px; cursor:pointer; transition:background .15s; border:1px solid transparent; }
-  .agent:hover { background:rgba(88,166,255,0.06); }
-  .agent.active { background:rgba(88,166,255,0.1); border-color:var(--accent); }
-  .agent-left { display:flex; align-items:center; gap:8px; }
-  .agent-dot { width:6px; height:6px; border-radius:50%; }
-  .agent-dot.claude { background:var(--accent); }
-  .agent-dot.codex { background:var(--cyan); }
-  .agent-name { font-weight:600; font-size:13px; }
-  .agent-meta { font-size:11px; color:var(--text-dim); }
-  .agent-actions { display:flex; gap:4px; opacity:0; transition:opacity .15s; }
-  .agent:hover .agent-actions { opacity:1; }
-  .agent-btn { background:none; border:1px solid var(--border); color:var(--text-dim); padding:2px 6px; border-radius:4px; cursor:pointer; font-size:11px; font-family:inherit; }
-  .agent-btn:hover { border-color:var(--text); color:var(--text); }
-  .agent-btn.kill:hover { border-color:var(--red); color:var(--red); }
+  .top-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: var(--text-dim);
+    font-size: 12px;
+  }
 
-  /* Spawn form */
-  .form-row { display:flex; gap:6px; margin-bottom:6px; }
-  .form-row select, .form-row input { background:var(--bg); color:var(--text); border:1px solid var(--border); padding:7px 10px; border-radius:6px; font-family:inherit; font-size:12px; flex:1; }
-  .form-row select:focus, .form-row input:focus { outline:none; border-color:var(--accent); }
-  .form-row input::placeholder { color:var(--text-dim); }
+  .status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: rgba(19, 27, 37, 0.9);
+  }
 
-  /* Buttons */
-  .btn { padding:7px 14px; border-radius:6px; border:none; font-family:inherit; font-size:12px; font-weight:500; cursor:pointer; transition:all .15s; display:inline-flex; align-items:center; gap:4px; }
-  .btn-primary { background:var(--accent); color:#000; }
-  .btn-primary:hover { background:#79c0ff; }
-  .btn-danger { background:rgba(248,81,73,0.15); color:var(--red); border:1px solid rgba(248,81,73,0.3); }
-  .btn-danger:hover { background:var(--red); color:#fff; }
-  .btn-warn { background:rgba(210,153,34,0.15); color:var(--yellow); border:1px solid rgba(210,153,34,0.3); }
-  .btn-warn:hover { background:var(--yellow); color:#000; }
-  .btn-sm { padding:4px 8px; font-size:11px; }
-  .btn-ghost { background:transparent; border:1px solid var(--border); color:var(--text-dim); }
-  .btn-ghost:hover { border-color:var(--text); color:var(--text); }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
 
-  /* Terminal */
-  .terminal { background:#000; border-radius:8px; padding:14px; font-size:12px; line-height:1.6; white-space:pre-wrap; word-break:break-all; max-height:520px; overflow-y:auto; color:#ccc; font-family:'SF Mono','Fira Code',monospace; }
-  .terminal::-webkit-scrollbar { width:5px; }
-  .terminal::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+  .status-dot.on { background: var(--green); }
+  .status-dot.off { background: var(--yellow); }
+  .status-dot.err { background: var(--red); }
 
-  /* Send bar */
-  .send-bar { display:flex; gap:8px; margin-top:12px; }
-  .send-bar input { flex:1; background:var(--bg); color:var(--text); border:1px solid var(--border); padding:9px 12px; border-radius:8px; font-family:inherit; font-size:13px; }
-  .send-bar input:focus { outline:none; border-color:var(--accent); }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.45; transform: scale(0.92); }
+  }
 
-  /* Quick actions */
-  .quick-actions { display:flex; gap:6px; flex-wrap:wrap; }
+  .container {
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: 24px;
+  }
 
-  /* Toast */
-  .toast { position:fixed; bottom:24px; right:24px; background:var(--surface); border:1px solid var(--border); padding:10px 18px; border-radius:8px; font-size:12px; opacity:0; transition:opacity .3s; pointer-events:none; z-index:100; }
-  .toast.show { opacity:1; }
-  .toast.success { border-color:var(--green); color:var(--green); }
-  .toast.error { border-color:var(--red); color:var(--red); }
+  .sessions-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+    align-items: stretch;
+  }
 
-  .empty { color:var(--text-dim); text-align:center; padding:30px; font-size:13px; }
+  .session-card,
+  .new-session-card {
+    min-width: 220px;
+    border-radius: 16px;
+    transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+  }
 
-  .log-viewer { background:#000; border-radius:8px; padding:12px; font-size:11px; line-height:1.8; max-height:180px; overflow-y:auto; color:var(--text-dim); font-family:'SF Mono','Fira Code',monospace; }
+  .session-card {
+    position: relative;
+    padding: 16px 18px;
+    background: linear-gradient(180deg, rgba(20, 28, 39, 0.95), rgba(17, 23, 33, 0.92));
+    border: 1px solid var(--border);
+    cursor: pointer;
+    box-shadow: var(--shadow);
+  }
 
-  /* No session state */
-  .welcome { text-align:center; padding:80px 20px; }
-  .welcome h2 { font-size:24px; margin-bottom:12px; }
-  .welcome p { color:var(--text-dim); font-size:14px; margin-bottom:24px; }
+  .session-card:hover,
+  .new-session-card:hover {
+    transform: translateY(-1px);
+    border-color: var(--accent);
+  }
+
+  .session-card.active {
+    border-color: var(--accent);
+    background: linear-gradient(180deg, rgba(20, 35, 53, 0.95), rgba(17, 27, 40, 0.94));
+  }
+
+  .sc-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .sc-detail {
+    margin-top: 6px;
+    color: var(--text-dim);
+    font-size: 11px;
+    word-break: break-all;
+  }
+
+  .sc-workers {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--green);
+  }
+
+  .sc-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 14px;
+    border-radius: 8px;
+    padding: 3px 7px;
+    cursor: pointer;
+  }
+
+  .sc-close:hover {
+    background: rgba(255, 111, 111, 0.14);
+    color: var(--red);
+  }
+
+  .new-session-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 18px;
+    color: var(--text-dim);
+    font-size: 13px;
+    border: 1px dashed rgba(146, 160, 179, 0.45);
+    background: rgba(19, 27, 37, 0.54);
+    cursor: pointer;
+  }
+
+  .panel {
+    background: linear-gradient(180deg, rgba(19, 27, 37, 0.96), rgba(14, 21, 30, 0.94));
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .panel + .panel {
+    margin-top: 16px;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(42, 54, 70, 0.85);
+  }
+
+  .panel-header h2 {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+  }
+
+  .panel-subtitle {
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .panel-body {
+    padding: 18px;
+  }
+
+  .summary-panel {
+    margin-bottom: 20px;
+  }
+
+  .summary-main {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 18px;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--accent);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+  }
+
+  .summary-title {
+    font-size: 24px;
+    line-height: 1.15;
+    font-weight: 800;
+  }
+
+  .summary-path {
+    margin-top: 8px;
+    color: var(--text-dim);
+    font-size: 12px;
+    word-break: break-all;
+  }
+
+  .summary-hint {
+    margin-top: 12px;
+    max-width: 720px;
+    color: var(--text-dim);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .summary-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .summary-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .stat-card {
+    padding: 14px;
+    border-radius: 14px;
+    background: rgba(11, 17, 25, 0.72);
+    border: 1px solid rgba(42, 54, 70, 0.9);
+  }
+
+  .stat-label {
+    color: var(--text-dim);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+
+  .stat-value {
+    margin-top: 8px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .stat-caption {
+    margin-top: 6px;
+    color: var(--text-dim);
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  .agent {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid transparent;
+    background: rgba(10, 16, 24, 0.45);
+    cursor: pointer;
+    transition: background 0.16s ease, border-color 0.16s ease;
+  }
+
+  .agent + .agent {
+    margin-top: 8px;
+  }
+
+  .agent:hover {
+    background: rgba(108, 182, 255, 0.06);
+  }
+
+  .agent.active {
+    border-color: var(--accent);
+    background: rgba(108, 182, 255, 0.09);
+  }
+
+  .agent-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .agent-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .agent-dot.claude { background: var(--accent); }
+  .agent-dot.codex { background: var(--cyan); }
+
+  .agent-name {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .agent-meta {
+    margin-top: 3px;
+    color: var(--text-dim);
+    font-size: 11px;
+    word-break: break-word;
+  }
+
+  .agent-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.16s ease;
+  }
+
+  .agent:hover .agent-actions,
+  .agent.active .agent-actions {
+    opacity: 1;
+  }
+
+  .agent-btn {
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    padding: 4px 7px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 11px;
+  }
+
+  .agent-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .agent-btn.kill:hover {
+    border-color: var(--red);
+    color: var(--red);
+  }
+
+  .helper-box {
+    margin-bottom: 12px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(108, 182, 255, 0.06);
+    border: 1px solid rgba(108, 182, 255, 0.2);
+    color: var(--text-dim);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .form-label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-dim);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+
+  .form-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .form-row select,
+  .form-row input,
+  .form-row textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(7, 11, 17, 0.85);
+    color: var(--text);
+    font-size: 12px;
+  }
+
+  .form-row textarea {
+    min-height: 92px;
+    resize: vertical;
+    line-height: 1.55;
+  }
+
+  .form-row select:focus,
+  .form-row input:focus,
+  .form-row textarea:focus,
+  .composer textarea:focus,
+  .modal input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(108, 182, 255, 0.12);
+  }
+
+  .field-hint {
+    margin: -2px 0 10px;
+    color: var(--text-dim);
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chip {
+    padding: 7px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(146, 160, 179, 0.28);
+    background: rgba(15, 22, 32, 0.9);
+    color: var(--text-dim);
+    font-size: 11px;
+    cursor: pointer;
+    transition: border-color 0.16s ease, color 0.16s ease, background 0.16s ease;
+  }
+
+  .chip:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(108, 182, 255, 0.06);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 14px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+  }
+
+  .btn:hover {
+    transform: translateY(-1px);
+  }
+
+  .btn-primary {
+    background: linear-gradient(180deg, var(--accent) 0%, var(--accent-strong) 100%);
+    color: #03101e;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--text-dim);
+  }
+
+  .btn-ghost:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .btn-warn {
+    background: rgba(232, 189, 98, 0.12);
+    border-color: rgba(232, 189, 98, 0.22);
+    color: var(--yellow);
+  }
+
+  .btn-danger {
+    background: rgba(255, 111, 111, 0.1);
+    border-color: rgba(255, 111, 111, 0.22);
+    color: var(--red);
+  }
+
+  .btn-sm {
+    padding: 7px 10px;
+    font-size: 11px;
+  }
+
+  .quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .conversation-panel .panel-body {
+    padding-top: 16px;
+  }
+
+  .thread {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 260px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .thread::-webkit-scrollbar,
+  .terminal::-webkit-scrollbar,
+  .activity-list::-webkit-scrollbar,
+  .browser::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .thread::-webkit-scrollbar-thumb,
+  .terminal::-webkit-scrollbar-thumb,
+  .activity-list::-webkit-scrollbar-thumb,
+  .browser::-webkit-scrollbar-thumb {
+    background: rgba(146, 160, 179, 0.35);
+    border-radius: 999px;
+  }
+
+  .bubble {
+    max-width: 86%;
+    padding: 12px 14px;
+    border-radius: 18px;
+    border: 1px solid transparent;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.65;
+    font-size: 12px;
+  }
+
+  .bubble-meta {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+  }
+
+  .bubble.system {
+    align-self: flex-start;
+    background: rgba(15, 22, 32, 0.95);
+    border-color: rgba(146, 160, 179, 0.18);
+    color: var(--text-dim);
+  }
+
+  .bubble.user {
+    align-self: flex-end;
+    background: linear-gradient(180deg, rgba(108, 182, 255, 0.22), rgba(63, 148, 255, 0.16));
+    border-color: rgba(108, 182, 255, 0.28);
+  }
+
+  .bubble.snapshot {
+    align-self: flex-start;
+    background: #070c12;
+    border-color: rgba(56, 213, 207, 0.24);
+    color: #cad4df;
+  }
+
+  .empty-thread,
+  .empty {
+    padding: 26px 20px;
+    border-radius: 14px;
+    border: 1px dashed rgba(146, 160, 179, 0.26);
+    color: var(--text-dim);
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .composer {
+    margin-top: 14px;
+    padding: 14px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: rgba(9, 14, 21, 0.92);
+  }
+
+  .composer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .composer-title {
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .composer-target {
+    color: var(--text-dim);
+    font-size: 11px;
+  }
+
+  .composer textarea {
+    width: 100%;
+    min-height: 112px;
+    resize: vertical;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: rgba(5, 8, 13, 0.92);
+    color: var(--text);
+    padding: 12px 14px;
+    line-height: 1.6;
+  }
+
+  .composer-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .composer-help {
+    color: var(--text-dim);
+    font-size: 11px;
+  }
+
+  .output-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.85fr);
+    gap: 18px;
+    margin-top: 18px;
+  }
+
+  .terminal {
+    min-height: 260px;
+    max-height: 420px;
+    overflow-y: auto;
+    padding: 16px;
+    border-radius: 14px;
+    background: #04080d;
+    border: 1px solid rgba(56, 213, 207, 0.18);
+    color: #d2dae4;
+    font-size: 12px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 420px;
+    overflow-y: auto;
+  }
+
+  .activity-item {
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(9, 14, 21, 0.86);
+    border: 1px solid rgba(42, 54, 70, 0.95);
+  }
+
+  .activity-time {
+    color: var(--accent);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .activity-text {
+    margin-top: 7px;
+    color: var(--text);
+    font-size: 12px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.58);
+    backdrop-filter: blur(8px);
+  }
+
+  .modal-overlay.show {
+    display: flex;
+  }
+
+  .modal {
+    width: 620px;
+    max-width: calc(100vw - 32px);
+    border-radius: 20px;
+    background: linear-gradient(180deg, rgba(19, 27, 37, 0.98), rgba(14, 21, 30, 0.97));
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    padding: 22px;
+  }
+
+  .modal h2 {
+    font-size: 18px;
+    margin-bottom: 14px;
+  }
+
+  .modal input {
+    width: 100%;
+    padding: 11px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(7, 11, 17, 0.9);
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .browser {
+    margin-bottom: 14px;
+    max-height: 320px;
+    overflow-y: auto;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: rgba(7, 11, 17, 0.82);
+  }
+
+  .browser-path {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 12px;
+  }
+
+  .browser-path button {
+    border: none;
+    background: transparent;
+    color: var(--accent);
+    cursor: pointer;
+    border-radius: 8px;
+    padding: 3px 5px;
+  }
+
+  .browser-path button:hover {
+    background: rgba(108, 182, 255, 0.08);
+  }
+
+  .dir-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(42, 54, 70, 0.6);
+    cursor: pointer;
+    font-size: 13px;
+  }
+
+  .dir-item:last-child {
+    border-bottom: none;
+  }
+
+  .dir-item:hover {
+    background: rgba(108, 182, 255, 0.06);
+  }
+
+  .dir-icon {
+    width: 18px;
+    text-align: center;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .dir-icon.git {
+    color: var(--orange);
+  }
+
+  .dir-name {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .dir-select {
+    opacity: 0;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #04111f;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 11px;
+    transition: opacity 0.16s ease;
+  }
+
+  .dir-item:hover .dir-select {
+    opacity: 1;
+  }
+
+  .recents {
+    margin-bottom: 12px;
+  }
+
+  .recents-label {
+    margin-bottom: 7px;
+    color: var(--text-dim);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+
+  .recent-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: 10px;
+    color: var(--text-dim);
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .recent-item:hover {
+    color: var(--text);
+    background: rgba(108, 182, 255, 0.06);
+  }
+
+  .toast {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 60;
+    opacity: 0;
+    pointer-events: none;
+    padding: 11px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(19, 27, 37, 0.98);
+    box-shadow: var(--shadow);
+    transition: opacity 0.25s ease;
+    font-size: 12px;
+  }
+
+  .toast.show { opacity: 1; }
+  .toast.success { color: var(--green); border-color: rgba(79, 211, 138, 0.32); }
+  .toast.error { color: var(--red); border-color: rgba(255, 111, 111, 0.34); }
+
+  .welcome {
+    padding: 96px 28px;
+    text-align: center;
+  }
+
+  .welcome h2 {
+    font-size: 28px;
+    margin-bottom: 14px;
+  }
+
+  .welcome p {
+    max-width: 560px;
+    margin: 0 auto 24px;
+    color: var(--text-dim);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  @media (max-width: 1100px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+
+    .summary-main {
+      flex-direction: column;
+    }
+
+    .summary-actions {
+      justify-content: flex-start;
+    }
+
+    .summary-stats,
+    .output-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .container {
+      padding: 16px;
+    }
+
+    .topbar {
+      padding: 12px 16px;
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .summary-stats,
+    .output-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .session-card,
+    .new-session-card {
+      min-width: 100%;
+    }
+
+    .bubble {
+      max-width: 100%;
+    }
+
+    .composer-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .modal {
+      padding: 18px;
+    }
+  }
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <h1><span>AI</span> Team Controller</h1>
+  <div class="brand">
+    <h1><span>AI</span> Team Desk</h1>
+    <p>Web for dispatch and status, iTerm for deep terminal work.</p>
+  </div>
   <div class="top-right">
-    <span><span class="status-dot off" id="statusDot"></span><span id="statusText">connecting...</span></span>
+    <div class="status-chip">
+      <span class="status-dot off" id="statusDot"></span>
+      <span id="statusText">connecting...</span>
+    </div>
   </div>
 </div>
 
 <div class="container">
-  <!-- Session cards -->
   <div class="sessions-row" id="sessionsRow">
     <div class="new-session-card" onclick="showCreateModal()">+ New Session</div>
   </div>
 
-  <!-- Main content (hidden until session selected) -->
   <div id="mainContent" style="display:none">
+    <div class="panel summary-panel">
+      <div class="panel-body">
+        <div class="summary-main">
+          <div>
+            <div class="eyebrow">Current Session</div>
+            <div class="summary-title" id="summaryTitle">No session selected</div>
+            <div class="summary-path" id="summaryProject">Select a session to start.</div>
+            <div class="summary-hint" id="summaryHint">
+              Web UI is optimized for dispatching instructions and checking progress. Use iTerm when you need full terminal control.
+            </div>
+          </div>
+          <div class="summary-actions">
+            <button class="btn btn-ghost" onclick="openTerminal('master')">Open Master iTerm</button>
+            <button class="btn btn-ghost" onclick="openTerminal()">Open Selected iTerm</button>
+            <button class="btn btn-ghost" onclick="refreshCurrentView()">Refresh Now</button>
+          </div>
+        </div>
+        <div class="summary-stats">
+          <div class="stat-card">
+            <div class="stat-label">Master</div>
+            <div class="stat-value" id="statMaster">-</div>
+            <div class="stat-caption" id="statMasterCaption">Provider and model</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Workers</div>
+            <div class="stat-value" id="statWorkers">0</div>
+            <div class="stat-caption" id="statWorkersCaption">Idle team</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Last Task</div>
+            <div class="stat-value" id="statLastTask">No task yet</div>
+            <div class="stat-caption" id="statLastTaskCaption">Dispatch history</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Started</div>
+            <div class="stat-value" id="statStarted">-</div>
+            <div class="stat-caption" id="statStartedCaption">Session time</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="grid">
-      <!-- Left sidebar -->
       <div>
         <div class="panel">
           <div class="panel-header">
-            <h2>Agents</h2>
+            <div>
+              <h2>Agents</h2>
+              <div class="panel-subtitle">Select who you want to talk to.</div>
+            </div>
             <span id="agentCount" style="font-size:11px;color:var(--text-dim)"></span>
           </div>
-          <div class="panel-body" id="agentList"></div>
+          <div class="panel-body">
+            <div class="helper-box">
+              Master is best for coordination. Workers are better for direct implementation or focused follow-ups.
+            </div>
+            <div id="agentList"></div>
+          </div>
         </div>
 
         <div class="panel">
-          <div class="panel-header"><h2>Spawn Worker</h2></div>
+          <div class="panel-header">
+            <div>
+              <h2>Spawn Worker</h2>
+              <div class="panel-subtitle">Create a worker and optionally dispatch a task immediately.</div>
+            </div>
+          </div>
           <div class="panel-body">
+            <label class="form-label" for="spawnType">Provider / Model</label>
             <div class="form-row">
               <select id="spawnType">
                 <option value="claude">Claude</option>
                 <option value="codex">Codex</option>
               </select>
-              <input id="spawnModel" placeholder="model (codex-5.4, o3...)">
+              <select id="spawnModel"></select>
             </div>
+            <div class="field-hint" id="spawnModelHint"></div>
+
+            <label class="form-label" for="spawnCount">Count</label>
             <div class="form-row">
               <select id="spawnCount">
                 <option value="1">1 worker</option>
@@ -170,16 +1094,30 @@
                 <option value="5">5 workers</option>
               </select>
             </div>
+
+            <label class="form-label" for="spawnTask">Task</label>
             <div class="form-row">
-              <input id="spawnTask" placeholder="Task to dispatch..." onkeydown="if(event.key==='Enter')spawnWorker()">
+              <textarea id="spawnTask" placeholder="Describe the role or task to dispatch. Shift+Enter for a new line."></textarea>
             </div>
-            <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="spawnWorker()">Spawn &amp; Dispatch</button>
+            <div class="chip-row" style="margin-bottom:12px">
+              <button class="chip" onclick="fillSpawnTask('You are the frontend worker. Handle UI, component, styling, and browser behavior tasks. Start by greeting in Korean and state your role.')">Frontend intro</button>
+              <button class="chip" onclick="fillSpawnTask('You are the backend worker. Handle API, database, infra, and server-side implementation tasks. Start by greeting in Korean and state your role.')">Backend intro</button>
+              <button class="chip" onclick="fillSpawnTask('Review the current repo status, summarize blockers, and report the next concrete action in Korean.')">Status reviewer</button>
+            </div>
+            <button class="btn btn-primary" style="width:100%" onclick="spawnWorker()">Spawn &amp; Dispatch</button>
           </div>
         </div>
 
         <div class="panel">
-          <div class="panel-header"><h2>Actions</h2></div>
+          <div class="panel-header">
+            <div>
+              <h2>Actions</h2>
+              <div class="panel-subtitle">High-impact controls for the current session.</div>
+            </div>
+          </div>
           <div class="panel-body quick-actions">
+            <button class="btn btn-ghost btn-sm" onclick="openTerminal()">Open Selected iTerm</button>
+            <button class="btn btn-ghost btn-sm" onclick="openTerminal('master')">Open Master iTerm</button>
             <button class="btn btn-warn btn-sm" onclick="interruptAll()">Interrupt All</button>
             <button class="btn btn-danger btn-sm" onclick="killWorkers()">Kill Workers</button>
             <button class="btn btn-danger btn-sm" onclick="stopSession()">Stop Session</button>
@@ -187,56 +1125,106 @@
         </div>
       </div>
 
-      <!-- Right: terminal + log -->
       <div>
-        <div class="panel">
+        <div class="panel conversation-panel">
           <div class="panel-header">
-            <h2>Output: <span id="peekTarget" style="color:var(--accent)">master</span></h2>
-            <div style="display:flex;gap:6px">
-              <button class="btn btn-ghost btn-sm" onclick="peekAgent()">Refresh</button>
+            <div>
+              <h2>Conversation</h2>
+              <div class="panel-subtitle" id="conversationHint">Select a target and send a message.</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-ghost btn-sm" onclick="openTerminal()">Open iTerm</button>
+              <button class="btn btn-ghost btn-sm" onclick="peekAgent()">Refresh Snapshot</button>
               <button class="btn btn-ghost btn-sm" id="autoRefreshBtn" onclick="toggleAutoRefresh()">Auto: OFF</button>
             </div>
           </div>
           <div class="panel-body">
-            <div class="terminal" id="terminal">Select an agent to view output</div>
-            <div class="send-bar">
-              <input id="sendMessage" placeholder="Send message..." onkeydown="if(event.key==='Enter')sendMessage()">
-              <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+            <div class="thread" id="chatThread"></div>
+            <div class="chip-row" id="promptChips" style="margin-top:14px"></div>
+
+            <div class="composer">
+              <div class="composer-head">
+                <div>
+                  <div class="composer-title" id="composerTitle">Send to master</div>
+                  <div class="composer-target" id="composerTarget">Choose an agent and type a concise instruction.</div>
+                </div>
+                <button class="btn btn-ghost btn-sm" onclick="clearDraft()">Clear</button>
+              </div>
+              <textarea id="sendMessage" placeholder="Type your instruction here. Enter sends. Shift+Enter inserts a new line."></textarea>
+              <div class="composer-actions">
+                <div class="composer-help" id="composerHelp">Enter to send, Shift+Enter for newline, detailed terminal work in iTerm.</div>
+                <button class="btn btn-primary" onclick="sendMessage()">Send Message</button>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="panel">
-          <div class="panel-header">
-            <h2>Task Log</h2>
-            <button class="btn btn-ghost btn-sm" onclick="refreshLog()">Refresh</button>
+        <div class="output-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <h2>Live Snapshot</h2>
+                <div class="panel-subtitle">Raw pane capture for the selected target.</div>
+              </div>
+              <button class="btn btn-ghost btn-sm" onclick="peekAgent()">Refresh</button>
+            </div>
+            <div class="panel-body">
+              <div class="terminal" id="terminal">Select an agent to view a live snapshot.</div>
+            </div>
           </div>
-          <div class="panel-body">
-            <div class="log-viewer" id="logViewer">No log data</div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <h2>Activity Feed</h2>
+                <div class="panel-subtitle">Recent session events parsed from the task log.</div>
+              </div>
+              <button class="btn btn-ghost btn-sm" onclick="refreshLog()">Refresh</button>
+            </div>
+            <div class="panel-body">
+              <div class="activity-list" id="activityFeed"></div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Welcome (no session) -->
   <div id="welcomeContent">
     <div class="welcome">
-      <h2>No active sessions</h2>
-      <p>Create a new session to start managing your AI team.</p>
-      <button class="btn btn-primary" onclick="showCreateModal()" style="font-size:14px;padding:10px 24px">+ New Session</button>
+      <h2>Start with a Session</h2>
+      <p>
+        Create a project session, pick your master model, then use the web UI for dispatch and iTerm for full terminal control.
+        This screen is optimized for quick instructions, status checks, and worker orchestration.
+      </p>
+      <button class="btn btn-primary" onclick="showCreateModal()" style="font-size:14px;padding:11px 24px">+ New Session</button>
     </div>
   </div>
 </div>
 
-<!-- Create session modal -->
 <div class="modal-overlay" id="createModal">
   <div class="modal">
     <h2>Create New Session</h2>
-    <input id="newProjectDir" placeholder="Project directory path (e.g. /Users/you/project)" autofocus onkeydown="if(event.key==='Enter')createSession()">
+    <div class="form-row" style="margin-bottom:8px">
+      <select id="createMasterType">
+        <option value="claude">Claude Master</option>
+        <option value="codex">Codex Master</option>
+      </select>
+      <select id="createMasterModel"></select>
+    </div>
+    <div class="field-hint" id="createMasterModelHint" style="margin-bottom:12px"></div>
+    <div class="recents" id="recentsSection" style="display:none">
+      <div class="recents-label">Recent projects</div>
+      <div id="recentsList"></div>
+    </div>
+    <input id="newProjectDir" placeholder="Path or browse below...">
+    <div class="browser" id="dirBrowser">
+      <div class="browser-path" id="browserPath"></div>
+      <div id="dirList"></div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="hideCreateModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="createSession()">Create</button>
+      <button class="btn btn-primary" id="createBtn" onclick="createSession()">Select This Folder</button>
     </div>
   </div>
 </div>
@@ -247,71 +1235,558 @@
 var currentSession = '';
 var currentTarget = 'master';
 var autoRefreshInterval = null;
+var latestStatus = null;
+var latestPeekText = '';
+var latestLogText = '';
+var CHAT_STORE_KEY = 'ai-ctl-chat-history-v2';
+var sendInFlight = false;
+var spawnInFlight = false;
+
+var MODEL_PRESETS = {
+  claude: {
+    hint: 'Anthropic Claude Code aliases. Default uses your account tier default model.',
+    options: [
+      { value: '', label: 'Default' },
+      { value: 'sonnet', label: 'sonnet' },
+      { value: 'opus', label: 'opus' },
+      { value: 'haiku', label: 'haiku' },
+      { value: 'sonnet[1m]', label: 'sonnet[1m]' },
+      { value: 'opusplan', label: 'opusplan' }
+    ]
+  },
+  codex: {
+    hint: 'OpenAI coding models for Codex CLI. Default uses the CLI default model.',
+    options: [
+      { value: '', label: 'Default' },
+      { value: 'gpt-5.4', label: 'gpt-5.4' },
+      { value: 'gpt-5.3-codex', label: 'gpt-5.3-codex' },
+      { value: 'gpt-5.2-codex', label: 'gpt-5.2-codex' },
+      { value: 'gpt-5.1-codex-max', label: 'gpt-5.1-codex-max' },
+      { value: 'gpt-5.1-codex', label: 'gpt-5.1-codex' },
+      { value: 'gpt-5.1-codex-mini', label: 'gpt-5.1-codex-mini' },
+      { value: 'gpt-5-codex', label: 'gpt-5-codex' }
+    ]
+  }
+};
+
+var QUICK_PROMPTS = {
+  master: [
+    '현재 상태를 짧게 요약하고 다음 작업만 정해줘.',
+    '지금 필요한 worker만 골라서 역할을 배정해줘.',
+    '진행 중인 작업에서 막힌 점이 있으면 바로 보고해줘.'
+  ],
+  claudeWorker: [
+    '현재 진행 상황과 남은 작업을 3줄 이내로 보고해줘.',
+    '리뷰 관점에서 가장 위험한 부분부터 점검해줘.',
+    '필요하면 스스로 다음 세부 작업까지 이어서 진행해줘.'
+  ],
+  codexWorker: [
+    '지금 바로 구현을 이어가고 끝나면 변경점만 짧게 보고해줘.',
+    '막히는 부분이 없으면 테스트까지 진행해줘.',
+    '작업 중 추정하지 말고 확인한 내용만 기준으로 진행해줘.'
+  ],
+  genericWorker: [
+    '현재 상태를 한 줄로 보고하고 다음 단계로 넘어가줘.',
+    '필요한 정보가 부족하면 바로 구체적으로 알려줘.',
+    '완료되면 변경 파일과 결과만 간단히 정리해줘.'
+  ]
+};
+
+function escapeHtml(value) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function isImeComposing(event) {
+  var nativeEvent = event.nativeEvent || event;
+  return Boolean(event.isComposing || (nativeEvent && nativeEvent.isComposing) || event.keyCode === 229);
+}
+
+function shouldSubmitOnEnter(event) {
+  return event.key === 'Enter' && !event.shiftKey && !isImeComposing(event);
+}
+
+function shouldConfirmOnEnter(event) {
+  return event.key === 'Enter' && !isImeComposing(event);
+}
 
 async function api(path, opts) {
   var res = await fetch(path, opts);
-  if (!res.ok) { var t = await res.text(); throw new Error(t); }
-  var ct = res.headers.get('content-type');
-  if (ct && ct.includes('json')) return res.json();
+  if (!res.ok) {
+    var text = await res.text();
+    throw new Error(text);
+  }
+  var type = res.headers.get('content-type') || '';
+  if (type.indexOf('json') >= 0) return res.json();
   return res.text();
 }
 
-function toast(msg, type) {
+function toast(message, type) {
   var el = document.getElementById('toast');
-  el.textContent = msg;
+  el.textContent = message;
   el.className = 'toast show ' + (type || 'success');
   setTimeout(function() { el.className = 'toast'; }, 2500);
 }
 
+function formatLocalTime(value) {
+  if (!value) return '-';
+  var date = new Date(value);
+  if (String(date) === 'Invalid Date') return value;
+  return date.toLocaleString([], {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+function syncModelOptions(typeId, modelId, hintId) {
+  var type = document.getElementById(typeId).value;
+  var modelEl = document.getElementById(modelId);
+  var hintEl = document.getElementById(hintId);
+  var config = MODEL_PRESETS[type] || { hint: 'Default model only', options: [{ value: '', label: 'Default' }] };
+  var previousValue = modelEl.value;
+
+  modelEl.replaceChildren();
+  config.options.forEach(function(optionConfig) {
+    var option = document.createElement('option');
+    option.value = optionConfig.value;
+    option.textContent = optionConfig.label;
+    modelEl.appendChild(option);
+  });
+
+  var keepPrevious = config.options.some(function(optionConfig) {
+    return optionConfig.value === previousValue;
+  });
+  modelEl.value = keepPrevious ? previousValue : '';
+  hintEl.textContent = config.hint;
+}
+
+function syncSpawnModelOptions() {
+  syncModelOptions('spawnType', 'spawnModel', 'spawnModelHint');
+}
+
+function syncCreateMasterModelOptions() {
+  syncModelOptions('createMasterType', 'createMasterModel', 'createMasterModelHint');
+}
+
 function showCreateModal() {
   document.getElementById('createModal').classList.add('show');
-  document.getElementById('newProjectDir').focus();
+  browseTo(null);
+  loadRecents();
+  setTimeout(function() {
+    document.getElementById('newProjectDir').focus();
+  }, 30);
 }
+
 function hideCreateModal() {
   document.getElementById('createModal').classList.remove('show');
 }
 
-// --- Sessions ---
+function getChatStore() {
+  try {
+    return JSON.parse(localStorage.getItem(CHAT_STORE_KEY) || '{}');
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveChatStore(store) {
+  localStorage.setItem(CHAT_STORE_KEY, JSON.stringify(store));
+}
+
+function getSessionHistory(session) {
+  var store = getChatStore();
+  return store[session] || [];
+}
+
+function appendHistory(session, entry) {
+  var store = getChatStore();
+  if (!store[session]) store[session] = [];
+  store[session].push(entry);
+  store[session] = store[session].slice(-80);
+  saveChatStore(store);
+}
+
+function addSystemNote(text, target) {
+  if (!currentSession) return;
+  appendHistory(currentSession, {
+    kind: 'system',
+    target: target || currentTarget || 'master',
+    text: text,
+    time: new Date().toISOString()
+  });
+  renderChatThread();
+}
+
+function getSelectedAgent() {
+  if (!latestStatus) return null;
+  if (currentTarget === 'master') return latestStatus.master;
+  var found = null;
+  latestStatus.workers.forEach(function(worker) {
+    if (worker.name === currentTarget) found = worker;
+  });
+  return found || latestStatus.master;
+}
+
+function normalizeCurrentTarget() {
+  if (!latestStatus) {
+    currentTarget = 'master';
+    return;
+  }
+  if (currentTarget === 'master') return;
+  var exists = latestStatus.workers.some(function(worker) {
+    return worker.name === currentTarget;
+  });
+  if (!exists) currentTarget = 'master';
+}
+
+function getPromptSet(agent) {
+  if (!agent || currentTarget === 'master') return QUICK_PROMPTS.master;
+  if (agent.agent_type === 'claude') return QUICK_PROMPTS.claudeWorker;
+  if (agent.agent_type === 'codex') return QUICK_PROMPTS.codexWorker;
+  return QUICK_PROMPTS.genericWorker;
+}
+
+function setComposerState() {
+  var agent = getSelectedAgent();
+  var title = currentTarget === 'master' ? 'Send to master' : 'Send to ' + currentTarget;
+  var meta = 'Choose an agent and type a concise instruction.';
+  var placeholder = 'Type your instruction here. Enter sends. Shift+Enter inserts a new line.';
+
+  if (agent) {
+    var modelSuffix = agent.model ? ' / ' + agent.model : '';
+    meta = 'Target: ' + agent.name + ' · ' + agent.agent_type + modelSuffix;
+    placeholder = currentTarget === 'master'
+      ? 'Example: 현재 상태를 정리하고 필요한 worker만 배정해줘.'
+      : 'Example: 현재 진행 상황 한 줄로 보고하고 바로 다음 단계 진행해줘.';
+  }
+
+  document.getElementById('composerTitle').textContent = title;
+  document.getElementById('composerTarget').textContent = meta;
+  document.getElementById('sendMessage').placeholder = placeholder;
+  document.getElementById('conversationHint').textContent = meta + ' · Open iTerm for full terminal interaction.';
+}
+
+function renderPromptChips() {
+  var container = document.getElementById('promptChips');
+  container.replaceChildren();
+  var prompts = getPromptSet(getSelectedAgent());
+  prompts.forEach(function(prompt) {
+    var button = document.createElement('button');
+    button.className = 'chip';
+    button.textContent = prompt;
+    button.addEventListener('click', function() {
+      document.getElementById('sendMessage').value = prompt;
+      document.getElementById('sendMessage').focus();
+    });
+    container.appendChild(button);
+  });
+}
+
+function summarizePeek(text) {
+  var lines = text.split('\n').map(function(line) { return line.trimEnd(); }).filter(function(line) {
+    return line.trim() !== '';
+  });
+  if (lines.length === 0) return '(No output yet)';
+  return lines.slice(-14).join('\n');
+}
+
+function renderChatThread() {
+  var container = document.getElementById('chatThread');
+  if (!container) return;
+  container.replaceChildren();
+
+  if (!currentSession) {
+    var empty = document.createElement('div');
+    empty.className = 'empty-thread';
+    empty.textContent = 'Select a session to start chatting with an agent.';
+    container.appendChild(empty);
+    return;
+  }
+
+  var intro = document.createElement('div');
+  intro.className = 'bubble system';
+  intro.innerHTML =
+    '<span class="bubble-meta">workflow</span>' +
+    'Send short instructions here. Use <strong>Open iTerm</strong> when you want direct terminal control or long interactive work.';
+  container.appendChild(intro);
+
+  var history = getSessionHistory(currentSession).filter(function(item) {
+    return item.target === currentTarget || item.target === '*' || currentTarget === 'master' && item.target === 'master';
+  });
+
+  if (history.length === 0 && !latestPeekText) {
+    var placeholder = document.createElement('div');
+    placeholder.className = 'empty-thread';
+    placeholder.textContent = 'No messages yet for this target. Try a quick prompt below.';
+    container.appendChild(placeholder);
+  }
+
+  history.forEach(function(item) {
+    var bubble = document.createElement('div');
+    bubble.className = 'bubble ' + (item.kind === 'outbound' ? 'user' : 'system');
+    bubble.innerHTML =
+      '<span class="bubble-meta">' + escapeHtml((item.kind === 'outbound' ? 'you' : 'system') + ' · ' + formatLocalTime(item.time)) + '</span>' +
+      escapeHtml(item.text);
+    container.appendChild(bubble);
+  });
+
+  if (latestPeekText) {
+    var snapshotBubble = document.createElement('div');
+    snapshotBubble.className = 'bubble snapshot';
+    snapshotBubble.innerHTML =
+      '<span class="bubble-meta">latest output</span>' +
+      escapeHtml(summarizePeek(latestPeekText));
+    container.appendChild(snapshotBubble);
+  }
+
+  container.scrollTop = container.scrollHeight;
+}
+
+function renderActivityFeed() {
+  var container = document.getElementById('activityFeed');
+  container.replaceChildren();
+
+  var lines = latestLogText
+    .split('\n')
+    .map(function(line) { return line.trim(); })
+    .filter(function(line) { return line.length > 0; });
+
+  if (lines.length === 0) {
+    var empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = 'No activity yet.';
+    container.appendChild(empty);
+    return;
+  }
+
+  lines.slice(-12).reverse().forEach(function(line) {
+    var match = line.match(/^\[(.*?)\]\s+(.*)$/);
+    var time = match ? match[1] : 'log';
+    var text = match ? match[2] : line;
+
+    var item = document.createElement('div');
+    item.className = 'activity-item';
+
+    var timeEl = document.createElement('div');
+    timeEl.className = 'activity-time';
+    timeEl.textContent = time;
+    item.appendChild(timeEl);
+
+    var textEl = document.createElement('div');
+    textEl.className = 'activity-text';
+    textEl.textContent = text;
+    item.appendChild(textEl);
+
+    container.appendChild(item);
+  });
+}
+
+function renderSummary() {
+  if (!latestStatus) {
+    document.getElementById('summaryTitle').textContent = 'No session selected';
+    document.getElementById('summaryProject').textContent = 'Select a session to start.';
+    document.getElementById('summaryHint').textContent = 'Choose a session, then send short instructions here or open iTerm for direct terminal work.';
+    document.getElementById('statMaster').textContent = '-';
+    document.getElementById('statMasterCaption').textContent = 'Master agent';
+    document.getElementById('statWorkers').textContent = '0';
+    document.getElementById('statWorkersCaption').textContent = 'No workers running';
+    document.getElementById('statLastTask').textContent = 'No task yet';
+    document.getElementById('statLastTaskCaption').textContent = 'Task count: 0';
+    document.getElementById('statStarted').textContent = '-';
+    document.getElementById('statStartedCaption').textContent = 'Session started';
+    return;
+  }
+
+  var masterModel = latestStatus.master.model ? ' / ' + latestStatus.master.model : '';
+  document.getElementById('summaryTitle').textContent = latestStatus.session;
+  document.getElementById('summaryProject').textContent = latestStatus.project;
+  document.getElementById('summaryHint').textContent =
+    'Current target: ' + currentTarget + '. Dispatch here, inspect raw output below, and jump into iTerm for terminal-native work.';
+
+  document.getElementById('statMaster').textContent = latestStatus.master.agent_type + masterModel;
+  document.getElementById('statMasterCaption').textContent = 'Master agent';
+
+  document.getElementById('statWorkers').textContent = String(latestStatus.workers.length);
+  document.getElementById('statWorkersCaption').textContent =
+    latestStatus.workers.length > 0 ? latestStatus.workers.length + ' active worker(s)' : 'No workers running';
+
+  document.getElementById('statLastTask').textContent = latestStatus.last_task || 'No task yet';
+  document.getElementById('statLastTaskCaption').textContent = 'Task count: ' + latestStatus.task_count;
+
+  document.getElementById('statStarted').textContent = formatLocalTime(latestStatus.started);
+  document.getElementById('statStartedCaption').textContent = 'Session started';
+}
+
+var currentBrowsePath = '';
+
+async function browseTo(path) {
+  try {
+    var url = '/api/browse';
+    if (path) url += '?path=' + encodeURIComponent(path);
+    var res = await api(url);
+    currentBrowsePath = res.current;
+    document.getElementById('newProjectDir').value = res.current;
+
+    var pathEl = document.getElementById('browserPath');
+    pathEl.replaceChildren();
+
+    var parts = res.current.split('/').filter(Boolean);
+    var accumulated = '';
+
+    var rootBtn = document.createElement('button');
+    rootBtn.textContent = '/';
+    rootBtn.addEventListener('click', function() { browseTo('/'); });
+    pathEl.appendChild(rootBtn);
+
+    parts.forEach(function(part) {
+      accumulated += '/' + part;
+      var sep = document.createElement('span');
+      sep.textContent = '/';
+      pathEl.appendChild(sep);
+
+      var btn = document.createElement('button');
+      btn.textContent = part;
+      var target = accumulated;
+      btn.addEventListener('click', function() { browseTo(target); });
+      pathEl.appendChild(btn);
+    });
+
+    var createBtn = document.getElementById('createBtn');
+    createBtn.textContent = res.is_git ? 'Create Session Here (git)' : 'Select This Folder';
+    createBtn.style.background = res.is_git ? 'var(--green)' : '';
+
+    var listEl = document.getElementById('dirList');
+    listEl.replaceChildren();
+
+    if (res.parent) {
+      var parentItem = document.createElement('div');
+      parentItem.className = 'dir-item';
+      var parentIcon = document.createElement('span');
+      parentIcon.className = 'dir-icon';
+      parentIcon.textContent = '\u2190';
+      var parentName = document.createElement('span');
+      parentName.className = 'dir-name';
+      parentName.textContent = '..';
+      parentItem.appendChild(parentIcon);
+      parentItem.appendChild(parentName);
+      parentItem.addEventListener('click', function() { browseTo(res.parent); });
+      listEl.appendChild(parentItem);
+    }
+
+    res.dirs.forEach(function(dir) {
+      var item = document.createElement('div');
+      item.className = 'dir-item';
+
+      var icon = document.createElement('span');
+      icon.className = 'dir-icon' + (dir.is_git ? ' git' : '');
+      icon.textContent = dir.is_git ? '\u25CF' : '\u25B8';
+      item.appendChild(icon);
+
+      var name = document.createElement('span');
+      name.className = 'dir-name';
+      name.textContent = dir.name;
+      if (dir.is_git) name.style.color = 'var(--orange)';
+      item.appendChild(name);
+
+      var selectBtn = document.createElement('button');
+      selectBtn.className = 'dir-select';
+      selectBtn.textContent = 'select';
+      selectBtn.addEventListener('click', function(event) {
+        event.stopPropagation();
+        document.getElementById('newProjectDir').value = dir.path;
+        createSession();
+      });
+      item.appendChild(selectBtn);
+
+      item.addEventListener('click', function() { browseTo(dir.path); });
+      listEl.appendChild(item);
+    });
+  } catch (error) {
+    toast('Browse failed: ' + error.message, 'error');
+  }
+}
+
+async function loadRecents() {
+  try {
+    var recents = await api('/api/recents');
+    var section = document.getElementById('recentsSection');
+    var list = document.getElementById('recentsList');
+    list.replaceChildren();
+
+    if (recents.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+
+    section.style.display = 'block';
+    recents.forEach(function(path) {
+      var item = document.createElement('div');
+      item.className = 'recent-item';
+
+      var icon = document.createElement('span');
+      icon.textContent = '\u21BB';
+      icon.style.color = 'var(--purple)';
+      item.appendChild(icon);
+
+      var label = document.createElement('span');
+      label.textContent = path;
+      item.appendChild(label);
+
+      item.addEventListener('click', function() {
+        document.getElementById('newProjectDir').value = path;
+        createSession();
+      });
+      list.appendChild(item);
+    });
+  } catch (error) {
+    /* ignore */
+  }
+}
+
 async function refreshSessions() {
   try {
     var sessions = await api('/api/sessions');
     var row = document.getElementById('sessionsRow');
     row.replaceChildren();
 
-    sessions.forEach(function(s) {
+    sessions.forEach(function(session) {
       var card = document.createElement('div');
-      card.className = 'session-card' + (currentSession === s.name ? ' active' : '');
-      card.addEventListener('click', function(e) {
-        if (e.target.classList.contains('sc-close')) return;
-        selectSession(s.name);
+      card.className = 'session-card' + (currentSession === session.name ? ' active' : '');
+      card.addEventListener('click', function(event) {
+        if (event.target.classList.contains('sc-close')) return;
+        selectSession(session.name);
       });
 
-      var nameEl = document.createElement('div');
-      nameEl.className = 'sc-name';
-      nameEl.textContent = s.name;
-      card.appendChild(nameEl);
+      var name = document.createElement('div');
+      name.className = 'sc-name';
+      name.textContent = session.name;
+      card.appendChild(name);
 
-      if (s.project) {
+      if (session.project) {
         var detail = document.createElement('div');
         detail.className = 'sc-detail';
-        detail.textContent = s.project;
+        detail.textContent = session.project;
         card.appendChild(detail);
       }
 
       var workers = document.createElement('div');
       workers.className = 'sc-workers';
-      workers.textContent = (s.worker_count || 0) + ' worker(s)';
+      workers.textContent = String(session.worker_count || 0) + ' worker(s)';
       card.appendChild(workers);
 
-      var closeBtn = document.createElement('button');
-      closeBtn.className = 'sc-close';
-      closeBtn.textContent = '\u00d7';
-      closeBtn.title = 'Stop session';
-      closeBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        stopSessionByName(s.name);
+      var close = document.createElement('button');
+      close.className = 'sc-close';
+      close.textContent = '\u00d7';
+      close.title = 'Stop session';
+      close.addEventListener('click', function(event) {
+        event.stopPropagation();
+        stopSessionByName(session.name);
       });
-      card.appendChild(closeBtn);
+      card.appendChild(close);
 
       row.appendChild(card);
     });
@@ -322,81 +1797,34 @@ async function refreshSessions() {
     newCard.addEventListener('click', showCreateModal);
     row.appendChild(newCard);
 
-    // Toggle views
     if (sessions.length === 0) {
+      currentSession = '';
+      currentTarget = 'master';
+      latestStatus = null;
+      latestPeekText = '';
+      latestLogText = '';
       document.getElementById('mainContent').style.display = 'none';
       document.getElementById('welcomeContent').style.display = 'block';
-      currentSession = '';
+      renderSummary();
+      renderChatThread();
+      renderActivityFeed();
     } else {
       document.getElementById('welcomeContent').style.display = 'none';
-      if (!currentSession && sessions.length > 0) {
-        selectSession(sessions[0].name);
-      } else if (currentSession && !sessions.find(function(s){return s.name===currentSession;})) {
+      document.getElementById('mainContent').style.display = 'block';
+      var exists = sessions.some(function(item) { return item.name === currentSession; });
+      if (!currentSession || !exists) {
         selectSession(sessions[0].name);
       }
     }
 
     document.getElementById('statusDot').className = 'status-dot ' + (sessions.length > 0 ? 'on' : 'off');
     document.getElementById('statusText').textContent = sessions.length + ' session(s)';
-  } catch(e) {
+  } catch (error) {
     document.getElementById('statusDot').className = 'status-dot err';
     document.getElementById('statusText').textContent = 'disconnected';
   }
 }
 
-function selectSession(name) {
-  currentSession = name;
-  currentTarget = 'master';
-  document.getElementById('mainContent').style.display = 'block';
-  document.getElementById('welcomeContent').style.display = 'none';
-  document.getElementById('peekTarget').textContent = 'master';
-
-  document.querySelectorAll('.session-card').forEach(function(c) {
-    c.classList.toggle('active', c.querySelector('.sc-name') && c.querySelector('.sc-name').textContent === name);
-  });
-
-  refreshStatus();
-  peekAgent();
-  refreshLog();
-}
-
-async function createSession() {
-  var dir = document.getElementById('newProjectDir').value.trim();
-  if (!dir) { toast('Path required', 'error'); return; }
-
-  try {
-    var res = await api('/api/sessions/create', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ project_dir: dir })
-    });
-    toast(res.message);
-    hideCreateModal();
-    document.getElementById('newProjectDir').value = '';
-    await refreshSessions();
-  } catch(e) {
-    toast('Failed: ' + e.message, 'error');
-  }
-}
-
-async function stopSessionByName(name) {
-  if (!confirm('Stop session ' + name + '?')) return;
-  try {
-    await api('/api/sessions/' + name, { method: 'DELETE' });
-    toast('Session stopped');
-    if (currentSession === name) currentSession = '';
-    await refreshSessions();
-  } catch(e) {
-    toast('Failed: ' + e.message, 'error');
-  }
-}
-
-async function stopSession() {
-  if (!currentSession) return;
-  await stopSessionByName(currentSession);
-}
-
-// --- Agents ---
 function createAgentElement(name, agentType, model, isActive) {
   var div = document.createElement('div');
   div.className = 'agent' + (isActive ? ' active' : '');
@@ -410,46 +1838,52 @@ function createAgentElement(name, agentType, model, isActive) {
   left.appendChild(dot);
 
   var info = document.createElement('div');
-  var nameSpan = document.createElement('div');
-  nameSpan.className = 'agent-name';
-  nameSpan.textContent = name;
-  info.appendChild(nameSpan);
+  var title = document.createElement('div');
+  title.className = 'agent-name';
+  title.textContent = name;
+  info.appendChild(title);
 
-  var metaStr = agentType;
-  if (model) metaStr += ' / ' + model;
-  var metaSpan = document.createElement('div');
-  metaSpan.className = 'agent-meta';
-  metaSpan.textContent = metaStr;
-  info.appendChild(metaSpan);
+  var meta = document.createElement('div');
+  meta.className = 'agent-meta';
+  meta.textContent = model ? agentType + ' / ' + model : agentType;
+  info.appendChild(meta);
 
   left.appendChild(info);
   div.appendChild(left);
 
-  if (name !== 'master') {
-    var actions = document.createElement('div');
-    actions.className = 'agent-actions';
+  var actions = document.createElement('div');
+  actions.className = 'agent-actions';
 
-    var intBtn = document.createElement('button');
-    intBtn.className = 'agent-btn';
-    intBtn.textContent = 'stop';
-    intBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
+  var openBtn = document.createElement('button');
+  openBtn.className = 'agent-btn';
+  openBtn.textContent = 'iTerm';
+  openBtn.addEventListener('click', function(event) {
+    event.stopPropagation();
+    openTerminal(name);
+  });
+  actions.appendChild(openBtn);
+
+  if (name !== 'master') {
+    var stopBtn = document.createElement('button');
+    stopBtn.className = 'agent-btn';
+    stopBtn.textContent = 'stop';
+    stopBtn.addEventListener('click', function(event) {
+      event.stopPropagation();
       interruptAgent(name);
     });
-    actions.appendChild(intBtn);
+    actions.appendChild(stopBtn);
 
     var killBtn = document.createElement('button');
     killBtn.className = 'agent-btn kill';
     killBtn.textContent = 'kill';
-    killBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
+    killBtn.addEventListener('click', function(event) {
+      event.stopPropagation();
       killAgent(name);
     });
     actions.appendChild(killBtn);
-
-    div.appendChild(actions);
   }
 
+  div.appendChild(actions);
   div.addEventListener('click', function() { selectAgent(name); });
   return div;
 }
@@ -457,82 +1891,223 @@ function createAgentElement(name, agentType, model, isActive) {
 async function refreshStatus() {
   if (!currentSession) return;
   try {
-    var st = await api('/api/status/' + currentSession);
+    latestStatus = await api('/api/status/' + currentSession);
+    normalizeCurrentTarget();
 
     var container = document.getElementById('agentList');
     container.replaceChildren();
-    container.appendChild(createAgentElement('master', st.master.agent_type, null, currentTarget === 'master'));
-    st.workers.forEach(function(w) {
-      container.appendChild(createAgentElement(w.name, w.agent_type, w.model, currentTarget === w.name));
+    container.appendChild(createAgentElement('master', latestStatus.master.agent_type, latestStatus.master.model, currentTarget === 'master'));
+    latestStatus.workers.forEach(function(worker) {
+      container.appendChild(createAgentElement(worker.name, worker.agent_type, worker.model, currentTarget === worker.name));
     });
-    document.getElementById('agentCount').textContent = (1 + st.workers.length) + ' agents';
-  } catch(e) {
-    var c = document.getElementById('agentList');
-    c.replaceChildren();
+
+    document.getElementById('agentCount').textContent = String(1 + latestStatus.workers.length) + ' agents';
+    renderSummary();
+    setComposerState();
+    renderPromptChips();
+    renderChatThread();
+  } catch (error) {
+    var fallback = document.getElementById('agentList');
+    fallback.replaceChildren();
     var empty = document.createElement('div');
     empty.className = 'empty';
-    empty.textContent = 'Failed to load';
-    c.appendChild(empty);
+    empty.textContent = 'Failed to load agents.';
+    fallback.appendChild(empty);
   }
+}
+
+function selectSession(name) {
+  currentSession = name;
+  currentTarget = 'master';
+  latestStatus = null;
+  latestPeekText = '';
+  latestLogText = '';
+  document.getElementById('mainContent').style.display = 'block';
+  document.getElementById('welcomeContent').style.display = 'none';
+
+  document.querySelectorAll('.session-card').forEach(function(card) {
+    var label = card.querySelector('.sc-name');
+    card.classList.toggle('active', !!label && label.textContent === name);
+  });
+
+  renderSummary();
+  setComposerState();
+  renderPromptChips();
+  renderChatThread();
+  renderActivityFeed();
+  document.getElementById('terminal').textContent = 'Loading live snapshot...';
+  refreshCurrentView();
 }
 
 function selectAgent(name) {
   currentTarget = name;
-  document.getElementById('peekTarget').textContent = name;
-  document.querySelectorAll('.agent').forEach(function(el) {
-    el.classList.toggle('active', el.dataset.name === name);
+  document.querySelectorAll('.agent').forEach(function(agent) {
+    agent.classList.toggle('active', agent.dataset.name === name);
   });
+  setComposerState();
+  renderPromptChips();
+  renderChatThread();
+  renderSummary();
   peekAgent();
+}
+
+async function createSession() {
+  var dir = document.getElementById('newProjectDir').value.trim();
+  if (!dir) {
+    toast('Path required', 'error');
+    return;
+  }
+
+  try {
+    var result = await api('/api/sessions/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        project_dir: dir,
+        master_type: document.getElementById('createMasterType').value,
+        master_model: document.getElementById('createMasterModel').value || null
+      })
+    });
+    toast(result.message);
+    hideCreateModal();
+    document.getElementById('newProjectDir').value = '';
+    await refreshSessions();
+    if (result.session) selectSession(result.session);
+  } catch (error) {
+    toast('Failed: ' + error.message, 'error');
+  }
+}
+
+async function stopSessionByName(name) {
+  if (!confirm('Stop session ' + name + '?')) return;
+  try {
+    await api('/api/sessions/' + name, { method: 'DELETE' });
+    toast('Session stopped');
+    if (currentSession === name) currentSession = '';
+    await refreshSessions();
+  } catch (error) {
+    toast('Failed: ' + error.message, 'error');
+  }
+}
+
+async function stopSession() {
+  if (!currentSession) return;
+  await stopSessionByName(currentSession);
 }
 
 async function peekAgent() {
   if (!currentSession || !currentTarget) return;
   try {
-    var text = await api('/api/peek/' + currentSession + '/' + currentTarget + '?lines=100');
-    var el = document.getElementById('terminal');
-    el.textContent = text || '(empty)';
-    el.scrollTop = el.scrollHeight;
-  } catch(e) {
-    document.getElementById('terminal').textContent = 'Error: ' + e.message;
+    latestPeekText = await api('/api/peek/' + currentSession + '/' + currentTarget + '?lines=120');
+    document.getElementById('terminal').textContent = latestPeekText || '(empty)';
+    renderChatThread();
+  } catch (error) {
+    latestPeekText = '';
+    document.getElementById('terminal').textContent = 'Error: ' + error.message;
+    renderChatThread();
   }
 }
 
 async function sendMessage() {
   var input = document.getElementById('sendMessage');
-  var msg = input.value.trim();
-  if (!msg || !currentSession) return;
+  var message = input.value.trim();
+  if (!message || !currentSession || sendInFlight) return;
+  sendInFlight = true;
+
   try {
     await api('/api/send', {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ session: currentSession, target: currentTarget, message: msg })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session: currentSession,
+        target: currentTarget,
+        message: message
+      })
     });
+
+    appendHistory(currentSession, {
+      kind: 'outbound',
+      target: currentTarget,
+      text: message,
+      time: new Date().toISOString()
+    });
+
     toast('Sent to ' + currentTarget);
     input.value = '';
-    setTimeout(peekAgent, 1000);
-  } catch(e) {
-    toast('Send failed: ' + e.message, 'error');
+    renderChatThread();
+    setTimeout(function() {
+      peekAgent();
+      refreshLog();
+    }, 900);
+  } catch (error) {
+    toast('Send failed: ' + error.message, 'error');
+  } finally {
+    sendInFlight = false;
   }
 }
 
-async function spawnWorker() {
-  if (!currentSession) { toast('Select a session first', 'error'); return; }
-  var wtype = document.getElementById('spawnType').value;
-  var model = document.getElementById('spawnModel').value.trim() || null;
-  var count = parseInt(document.getElementById('spawnCount').value);
-  var task = document.getElementById('spawnTask').value.trim();
+async function openTerminal(target) {
+  if (!currentSession) return;
+  var resolvedTarget = target || currentTarget || 'master';
 
   try {
-    var res = await api('/api/spawn', {
+    var result = await api('/api/open-terminal', {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ session: currentSession, worker_type: wtype, model: model, count: count, task: task || '' })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session: currentSession,
+        target: resolvedTarget
+      })
     });
-    toast(res.message);
+    toast(result.message);
+    addSystemNote('Opened ' + resolvedTarget + ' in iTerm.', resolvedTarget);
+  } catch (error) {
+    toast('Open failed: ' + error.message, 'error');
+  }
+}
+
+function fillSpawnTask(text) {
+  document.getElementById('spawnTask').value = text;
+  document.getElementById('spawnTask').focus();
+}
+
+async function spawnWorker() {
+  if (!currentSession) {
+    toast('Select a session first', 'error');
+    return;
+  }
+  if (spawnInFlight) return;
+
+  var workerType = document.getElementById('spawnType').value;
+  var model = document.getElementById('spawnModel').value || null;
+  var count = parseInt(document.getElementById('spawnCount').value, 10);
+  var task = document.getElementById('spawnTask').value.trim();
+  spawnInFlight = true;
+
+  try {
+    var result = await api('/api/spawn', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session: currentSession,
+        worker_type: workerType,
+        model: model,
+        count: count,
+        task: task || ''
+      })
+    });
+    toast(result.message);
     document.getElementById('spawnTask').value = '';
-    setTimeout(function() { refreshStatus(); refreshSessions(); }, 2000);
-  } catch(e) {
-    toast('Spawn failed: ' + e.message, 'error');
+    addSystemNote(result.message + (task ? ' Task: ' + task : ''), '*');
+    setTimeout(function() {
+      refreshStatus();
+      refreshSessions();
+      refreshLog();
+    }, 1200);
+  } catch (error) {
+    toast('Spawn failed: ' + error.message, 'error');
+  } finally {
+    spawnInFlight = false;
   }
 }
 
@@ -541,11 +2116,17 @@ async function interruptAll() {
   try {
     await api('/api/interrupt', {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ session: currentSession, target: 'all' })
     });
     toast('Interrupted all');
-  } catch(e) { toast('Failed: ' + e.message, 'error'); }
+    addSystemNote('Interrupted all agents.', '*');
+    setTimeout(function() {
+      refreshCurrentView();
+    }, 400);
+  } catch (error) {
+    toast('Failed: ' + error.message, 'error');
+  }
 }
 
 async function interruptAgent(name) {
@@ -553,11 +2134,17 @@ async function interruptAgent(name) {
   try {
     await api('/api/interrupt', {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ session: currentSession, target: name })
     });
     toast('Interrupted ' + name);
-  } catch(e) { toast('Failed: ' + e.message, 'error'); }
+    addSystemNote('Interrupted ' + name + '.', name);
+    setTimeout(function() {
+      refreshCurrentView();
+    }, 400);
+  } catch (error) {
+    toast('Failed: ' + error.message, 'error');
+  }
 }
 
 async function killAgent(name) {
@@ -565,60 +2152,125 @@ async function killAgent(name) {
   try {
     await api('/api/kill-agent', {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ session: currentSession, target: name })
     });
     toast('Killed ' + name);
-    setTimeout(refreshStatus, 500);
-  } catch(e) { toast('Failed: ' + e.message, 'error'); }
+    addSystemNote('Killed ' + name + '.', name);
+    setTimeout(function() {
+      refreshCurrentView();
+      refreshStatus();
+      refreshSessions();
+      refreshLog();
+    }, 700);
+  } catch (error) {
+    toast('Failed: ' + error.message, 'error');
+  }
 }
 
 async function killWorkers() {
   if (!currentSession) return;
   if (!confirm('Kill all workers?')) return;
+
   try {
     await api('/api/kill-workers', {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ session: currentSession })
     });
     toast('All workers killed');
-    setTimeout(function() { refreshStatus(); refreshSessions(); }, 1000);
-  } catch(e) { toast('Failed: ' + e.message, 'error'); }
+    addSystemNote('Killed all workers.', '*');
+    setTimeout(function() {
+      refreshCurrentView();
+      refreshStatus();
+      refreshSessions();
+      refreshLog();
+    }, 700);
+  } catch (error) {
+    toast('Failed: ' + error.message, 'error');
+  }
+}
+
+function updateAutoRefreshButton() {
+  var button = document.getElementById('autoRefreshBtn');
+  if (autoRefreshInterval) {
+    button.textContent = 'Auto: ON';
+    button.style.borderColor = 'var(--green)';
+    button.style.color = 'var(--green)';
+  } else {
+    button.textContent = 'Auto: OFF';
+    button.style.borderColor = '';
+    button.style.color = '';
+  }
 }
 
 function toggleAutoRefresh() {
-  var btn = document.getElementById('autoRefreshBtn');
   if (autoRefreshInterval) {
     clearInterval(autoRefreshInterval);
     autoRefreshInterval = null;
-    btn.textContent = 'Auto: OFF';
   } else {
     autoRefreshInterval = setInterval(function() {
-      peekAgent();
-      refreshStatus();
-      refreshLog();
+      refreshCurrentView();
     }, 3000);
-    btn.textContent = 'Auto: ON';
-    btn.style.borderColor = 'var(--green)';
-    btn.style.color = 'var(--green)';
   }
+  updateAutoRefreshButton();
 }
 
 async function refreshLog() {
   if (!currentSession) return;
   try {
-    var text = await api('/api/peek/' + currentSession + '/log?lines=30');
-    document.getElementById('logViewer').textContent = text || '(empty)';
-  } catch(e) { /* ignore */ }
+    latestLogText = await api('/api/peek/' + currentSession + '/log?lines=40');
+    renderActivityFeed();
+  } catch (error) {
+    latestLogText = '';
+    renderActivityFeed();
+  }
 }
 
-// Close modal on overlay click
-document.getElementById('createModal').addEventListener('click', function(e) {
-  if (e.target === this) hideCreateModal();
+async function refreshCurrentView() {
+  if (!currentSession) return;
+  await refreshStatus();
+  await Promise.all([peekAgent(), refreshLog()]);
+}
+
+function clearDraft() {
+  document.getElementById('sendMessage').value = '';
+  document.getElementById('sendMessage').focus();
+}
+
+document.getElementById('createModal').addEventListener('click', function(event) {
+  if (event.target === this) hideCreateModal();
 });
 
-// Init
+document.getElementById('spawnType').addEventListener('change', syncSpawnModelOptions);
+document.getElementById('createMasterType').addEventListener('change', syncCreateMasterModelOptions);
+document.getElementById('sendMessage').addEventListener('keydown', function(event) {
+  if (shouldSubmitOnEnter(event)) {
+    event.preventDefault();
+    sendMessage();
+  }
+});
+document.getElementById('spawnTask').addEventListener('keydown', function(event) {
+  if (shouldSubmitOnEnter(event)) {
+    event.preventDefault();
+    spawnWorker();
+  }
+});
+document.getElementById('newProjectDir').addEventListener('keydown', function(event) {
+  if (shouldConfirmOnEnter(event)) {
+    event.preventDefault();
+    createSession();
+  }
+});
+
+syncSpawnModelOptions();
+syncCreateMasterModelOptions();
+renderSummary();
+renderChatThread();
+renderActivityFeed();
+setComposerState();
+renderPromptChips();
+updateAutoRefreshButton();
 refreshSessions();
 setInterval(refreshSessions, 8000);
 </script>

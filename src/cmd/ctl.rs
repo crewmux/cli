@@ -81,7 +81,19 @@ fn cmd_status() -> Result<()> {
     }
     println!();
 
-    println!("  {} (claude)", "master".blue().bold());
+    let master_type = m.master.r#type.as_deref().unwrap_or("claude");
+    let master_model = m
+        .master
+        .model
+        .as_ref()
+        .map(|model| format!("/{}", model))
+        .unwrap_or_default();
+    println!(
+        "  {} ({}{})",
+        "master".blue().bold(),
+        master_type,
+        master_model
+    );
 
     if m.workers.is_empty() {
         println!();
@@ -108,10 +120,7 @@ fn cmd_status() -> Result<()> {
 
     println!();
     println!("{}", "─".repeat(50).dimmed());
-    println!(
-        "  {} <name> \"msg\"   Send to agent",
-        "ai ctl send".bold()
-    );
+    println!("  {} <name> \"msg\"   Send to agent", "ai ctl send".bold());
     println!("  {} <name>          View output", "ai ctl peek".bold());
     println!("  {}                List all agents", "ai ctl roles".bold());
 
@@ -124,7 +133,14 @@ fn cmd_roles() -> Result<()> {
 
     println!("{}", "Available agents:".bold());
     println!();
-    println!("  {}  (claude)", "master".blue());
+    let master_type = m.master.r#type.as_deref().unwrap_or("claude");
+    let master_model = m
+        .master
+        .model
+        .as_ref()
+        .map(|model| format!("/{}", model))
+        .unwrap_or_default();
+    println!("  {}  ({}{})", "master".blue(), master_type, master_model);
     for (name, w) in &m.workers {
         let color_name = match w.r#type.as_str() {
             "claude" => name.blue(),
@@ -211,7 +227,7 @@ fn cmd_broadcast(message: String) -> Result<()> {
     std::thread::sleep(std::time::Duration::from_millis(500));
 
     // Send to all workers
-    for (_, w) in &m.workers {
+    for w in m.workers.values() {
         tmux::send_keys(&session, &w.pane, &message)?;
         std::thread::sleep(std::time::Duration::from_millis(500));
     }
@@ -225,7 +241,8 @@ fn cmd_interrupt(target: String) -> Result<()> {
     let m = meta::load_meta(&session)?;
 
     if target == "all" {
-        for (_, w) in &m.workers {
+        tmux::send_ctrl_c(&session, &m.master.pane)?;
+        for w in m.workers.values() {
             tmux::send_ctrl_c(&session, &w.pane)?;
         }
     } else {
@@ -243,7 +260,7 @@ fn cmd_kill_workers() -> Result<()> {
     let session = ensure_session()?;
     let m = meta::load_meta(&session)?;
 
-    for (_, w) in &m.workers {
+    for w in m.workers.values() {
         tmux::kill_pane(&session, &w.pane)?;
     }
 

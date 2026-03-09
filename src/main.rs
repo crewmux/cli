@@ -1,5 +1,7 @@
+mod agent;
 mod cmd;
 mod meta;
+mod prompt;
 mod tmux;
 mod web;
 

@@ -1,4 +1,4 @@
-use crate::{meta, tmux};
+use crate::{agent, meta, tmux};
 use anyhow::Result;
 use clap::Subcommand;
 use colored::*;
@@ -9,6 +9,12 @@ pub enum TeamAction {
     Start {
         /// Project directory (defaults to cwd)
         dir: Option<String>,
+        /// Master agent type: claude or codex
+        #[arg(short = 't', long = "master-type", default_value = "claude")]
+        master_type: String,
+        /// Master model
+        #[arg(short = 'm', long = "master-model")]
+        master_model: Option<String>,
     },
     /// Stop current project's team
     Stop {
@@ -28,7 +34,11 @@ pub enum TeamAction {
 
 pub fn run(action: TeamAction) -> Result<()> {
     match action {
-        TeamAction::Start { dir } => cmd_start(dir),
+        TeamAction::Start {
+            dir,
+            master_type,
+            master_model,
+        } => cmd_start(dir, master_type, master_model),
         TeamAction::Stop { dir } => cmd_stop(dir),
         TeamAction::StopAll => cmd_stop_all(),
         TeamAction::List => cmd_list(),
@@ -36,7 +46,7 @@ pub fn run(action: TeamAction) -> Result<()> {
     }
 }
 
-fn cmd_start(dir: Option<String>) -> Result<()> {
+fn cmd_start(dir: Option<String>, master_type: String, master_model: Option<String>) -> Result<()> {
     let project_dir = match dir {
         Some(d) => std::fs::canonicalize(&d)?.to_string_lossy().to_string(),
         None => std::env::current_dir()?.to_string_lossy().to_string(),
@@ -44,7 +54,10 @@ fn cmd_start(dir: Option<String>) -> Result<()> {
     let session = meta::session_name(&project_dir);
 
     if tmux::has_session(&session) {
-        println!("{}", format!("Session '{}' already running. Attaching...", session).blue());
+        println!(
+            "{}",
+            format!("Session '{}' already running. Attaching...", session).blue()
+        );
         return tmux::attach(&session);
     }
 
@@ -67,33 +80,25 @@ fn cmd_start(dir: Option<String>) -> Result<()> {
     tmux::set_option(&session, "pane-border-status", "top")?;
 
     // Master pane
-    let master_pane = tmux::current_pane_index(&session)?;
-    let master_pane_id = format!("1.{}", master_pane);
+    let master_pane_id = tmux::current_pane_id(&session)?;
     tmux::select_pane_title(&session, &master_pane_id, "master")?;
 
-    // Check for master prompt
-    let master_prompt_path = meta::team_dir().join("master-prompt.md");
-    let claude_cmd = if master_prompt_path.exists() {
-        format!(
-            "claude --disallowedTools Agent,TeamCreate,TeamDelete,SendMessage --append-system-prompt \"$(cat {})\"",
-            master_prompt_path.display()
-        )
-    } else {
-        "claude".to_string()
-    };
-    tmux::send_keys(&session, &master_pane_id, &claude_cmd)?;
+    let master_cmd = agent::build_cli_command(&master_type, &master_model, &project_dir, true)?;
+    tmux::send_keys(&session, &master_pane_id, &master_cmd)?;
 
     // Log pane
-    tmux::split_window_vertical(&session, &master_pane_id, &project_dir, 6)?;
-    let log_pane = tmux::current_pane_index(&session)?;
-    let log_pane_id = format!("1.{}", log_pane);
+    let log_pane_id = tmux::split_window_vertical(&session, &master_pane_id, &project_dir, 6)?;
     tmux::select_pane_title(&session, &log_pane_id, "log")?;
 
     let log_file = meta::log_path(&session);
     tmux::send_keys(
         &session,
         &log_pane_id,
-        &format!("touch '{}' && tail -f '{}'", log_file.display(), log_file.display()),
+        &format!(
+            "touch '{}' && tail -f '{}'",
+            log_file.display(),
+            log_file.display()
+        ),
     )?;
 
     // Save metadata
@@ -104,22 +109,37 @@ fn cmd_start(dir: Option<String>) -> Result<()> {
         started: now,
         master: meta::PaneMeta {
             pane: master_pane_id,
-            r#type: Some("claude".into()),
+            r#type: Some(master_type.clone()),
+            model: master_model.clone(),
         },
         workers: std::collections::HashMap::new(),
         log: meta::PaneMeta {
             pane: log_pane_id,
             r#type: None,
+            model: None,
         },
         last_task: None,
         task_count: 0,
     };
     meta::save_meta(&session, &team_meta)?;
 
-    println!("{}", "Master is ready.".green());
+    let master_model_suffix = master_model
+        .as_ref()
+        .map(|model| format!("/{}", model))
+        .unwrap_or_default();
+    println!(
+        "{}",
+        format!("Master is ready ({}{}).", master_type, master_model_suffix).green()
+    );
     println!();
-    println!("  {} \"your task\"    Spawn workers", "ai task spawn".bold());
-    println!("  {}               Check team status", "ai ctl status".bold());
+    println!(
+        "  {} \"your task\"    Spawn workers",
+        "ai task spawn".bold()
+    );
+    println!(
+        "  {}               Check team status",
+        "ai ctl status".bold()
+    );
     println!();
 
     tmux::select_pane(&session, &team_meta.master.pane)?;
@@ -170,12 +190,7 @@ fn cmd_list() -> Result<()> {
     for s in sessions {
         if let Ok(m) = meta::load_meta(&s) {
             let wc = m.workers.len();
-            println!(
-                "  {} -> {}  [master + {} workers]",
-                s.cyan(),
-                m.project,
-                wc
-            );
+            println!("  {} -> {}  [master + {} workers]", s.cyan(), m.project, wc);
         } else {
             println!("  {}", s.cyan());
         }

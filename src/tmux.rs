@@ -44,64 +44,48 @@ pub fn set_option(session: &str, key: &str, value: &str) -> Result<()> {
     Ok(())
 }
 
-pub fn current_pane_index(session: &str) -> Result<String> {
+pub fn current_pane_id(session: &str) -> Result<String> {
     tmux(&[
         "display-message",
         "-t",
         &format!("{}:1", session),
         "-p",
-        "#{pane_index}",
+        "#{pane_id}",
     ])
 }
 
 pub fn select_pane_title(session: &str, pane: &str, title: &str) -> Result<()> {
-    tmux(&[
-        "select-pane",
-        "-t",
-        &format!("{}:{}", session, pane),
-        "-T",
-        title,
-    ])?;
+    let target = pane_target(session, pane);
+    tmux(&["select-pane", "-t", &target, "-T", title])?;
     Ok(())
 }
 
 pub fn send_keys(session: &str, pane: &str, text: &str) -> Result<()> {
-    tmux(&[
-        "send-keys",
-        "-t",
-        &format!("{}:{}", session, pane),
-        "-l",
-        text,
-    ])?;
-    tmux(&[
-        "send-keys",
-        "-t",
-        &format!("{}:{}", session, pane),
-        "Enter",
-    ])?;
+    let target = pane_target(session, pane);
+    tmux(&["send-keys", "-t", &target, "-l", text])?;
+    tmux(&["send-keys", "-t", &target, "Enter"])?;
     Ok(())
 }
 
 pub fn send_ctrl_c(session: &str, pane: &str) -> Result<()> {
-    tmux(&[
-        "send-keys",
-        "-t",
-        &format!("{}:{}", session, pane),
-        "C-c",
-    ])?;
+    let target = pane_target(session, pane);
+    tmux(&["send-keys", "-t", &target, "C-c"])?;
     Ok(())
 }
 
-pub fn split_window_horizontal(session: &str, target_pane: &str, cwd: &str) -> Result<()> {
+pub fn split_window_horizontal(session: &str, target_pane: &str, cwd: &str) -> Result<String> {
+    let target = pane_target(session, target_pane);
     tmux(&[
         "split-window",
         "-h",
+        "-P",
+        "-F",
+        "#{pane_id}",
         "-t",
-        &format!("{}:{}", session, target_pane),
+        &target,
         "-c",
         cwd,
-    ])?;
-    Ok(())
+    ])
 }
 
 pub fn split_window_vertical(
@@ -109,18 +93,21 @@ pub fn split_window_vertical(
     target_pane: &str,
     cwd: &str,
     lines: u32,
-) -> Result<()> {
+) -> Result<String> {
+    let target = pane_target(session, target_pane);
     tmux(&[
         "split-window",
         "-v",
+        "-P",
+        "-F",
+        "#{pane_id}",
         "-t",
-        &format!("{}:{}", session, target_pane),
+        &target,
         "-c",
         cwd,
         "-l",
         &lines.to_string(),
-    ])?;
-    Ok(())
+    ])
 }
 
 pub fn select_layout(session: &str, layout: &str) -> Result<()> {
@@ -129,11 +116,34 @@ pub fn select_layout(session: &str, layout: &str) -> Result<()> {
 }
 
 pub fn select_pane(session: &str, pane: &str) -> Result<()> {
-    tmux(&[
-        "select-pane",
-        "-t",
-        &format!("{}:{}", session, pane),
-    ])?;
+    let target = pane_target(session, pane);
+    tmux(&["select-pane", "-t", &target])?;
+    Ok(())
+}
+
+pub fn open_in_iterm(session: &str) -> Result<()> {
+    let attach_command = format!("exec tmux attach -t {}", shell_quote(session));
+    let status = Command::new("/usr/bin/osascript")
+        .args([
+            "-e",
+            r#"tell application "iTerm""#,
+            "-e",
+            r#"activate"#,
+            "-e",
+            r#"create window with default profile"#,
+            "-e",
+            &format!(
+                r#"tell current session of current window to write text "{}""#,
+                applescript_escape(&attach_command)
+            ),
+            "-e",
+            r#"end tell"#,
+        ])
+        .status()
+        .context("Failed to open iTerm")?;
+    if !status.success() {
+        bail!("Failed to open iTerm");
+    }
     Ok(())
 }
 
@@ -155,15 +165,17 @@ pub fn kill_session(session: &str) -> Result<()> {
 }
 
 pub fn kill_pane(session: &str, pane: &str) -> Result<()> {
-    let _ = tmux(&["kill-pane", "-t", &format!("{}:{}", session, pane)]);
+    let target = pane_target(session, pane);
+    let _ = tmux(&["kill-pane", "-t", &target]);
     Ok(())
 }
 
 pub fn capture_pane(session: &str, pane: &str, lines: u32) -> Result<String> {
+    let target = pane_target(session, pane);
     tmux(&[
         "capture-pane",
         "-t",
-        &format!("{}:{}", session, pane),
+        &target,
         "-p",
         "-S",
         &format!("-{}", lines),
@@ -178,5 +190,21 @@ pub fn list_sessions_raw() -> Result<Vec<String>> {
             .map(String::from)
             .collect()),
         Err(_) => Ok(vec![]),
+    }
+}
+
+fn shell_quote(value: &str) -> String {
+    format!("'{}'", value.replace('\'', r#"'"'"'"#))
+}
+
+fn applescript_escape(value: &str) -> String {
+    value.replace('\\', "\\\\").replace('"', "\\\"")
+}
+
+fn pane_target(session: &str, pane: &str) -> String {
+    if pane.starts_with('%') || pane.contains(':') {
+        pane.to_string()
+    } else {
+        format!("{}:{}", session, pane)
     }
 }

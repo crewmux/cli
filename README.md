@@ -1,185 +1,171 @@
 # AI Team Controller (`ai`)
 
-tmux 기반 AI 에이전트 팀을 관리하는 올인원 CLI + 웹 대시보드.
+`ai`는 tmux 세션을 기반으로 여러 AI CLI 에이전트를 한 팀처럼 묶어 관리하는 Rust CLI + 웹 대시보드입니다. 하나의 프로젝트 디렉토리를 하나의 팀 세션으로 다루고, master/worker 에이전트를 동시에 띄워 작업 분배, 출력 확인, 메시지 전송, 로그 추적을 한 곳에서 처리합니다.
 
-Claude, Codex 등 여러 AI CLI 에이전트를 동시에 띄우고, 작업을 분배하고, 실시간으로 모니터링할 수 있습니다.
+## 현재 제공 기능
 
-## 원라인 설치
+- 프로젝트별 팀 세션 생성, 중지, 재연결
+- master 에이전트 자동 부팅
+- Claude/Codex 워커 스폰과 태스크 디스패치
+- 기본 master orchestration prompt 자동 bootstrap
+- tmux pane 출력 캡처, 브로드캐스트, Ctrl+C, 워커 종료
+- 브라우저 기반 세션/에이전트 관리 UI
+- macOS `launchd` 기반 대시보드 백그라운드 실행
+- 설치 스크립트에서 tmux / Node.js / Rust / Claude CLI / Codex CLI 자동 설치
+
+## 요구 사항
+
+- macOS 권장
+- Linux도 CLI와 `ai web`은 사용 가능하지만 서비스 설치 헬퍼는 아직 없음
+- [tmux](https://github.com/tmux/tmux)
+- [Rust](https://rustup.rs)
+- `claude` CLI 또는 `codex` CLI
+- 둘 다 설치되어 있으면 master/worker 타입을 자유롭게 선택 가능
+- 둘 중 하나만 있어도 해당 provider만 사용해 세션 운영 가능
+
+`./install.sh`는 위 의존성을 자동으로 맞추려 시도합니다. 기본값은 `claude` + `codex` 둘 다 설치이며, 특정 provider만 원하면 `AI_INSTALL_AGENTS=claude ./install.sh` 또는 `AI_INSTALL_AGENTS=codex ./install.sh`처럼 제한할 수 있습니다.
+
+## 설치
+
+### 로컬 저장소 기준
 
 ```bash
-git clone https://github.com/YOUR/ai-ctl.git && cd ai-ctl && ./install.sh
+git clone <repo-url> ai-ctl
+cd ai-ctl
+./install.sh
 ```
 
-### 필요 조건
+비대화식 설치(`curl | bash`)에서는 서비스 설치도 기본으로 함께 진행됩니다. 원하지 않으면 `AI_INSTALL_SERVICE=0 ./install.sh`를 사용하세요.
 
-- macOS (Linux도 가능, launchd 대신 systemd 수동 설정)
-- [tmux](https://github.com/tmux/tmux) (`brew install tmux`)
-- [Rust](https://rustup.rs) (설치 스크립트가 자동 설치)
-- `claude` CLI 또는 `codex` CLI (사용할 에이전트)
+설치 스크립트가 처리하는 항목:
 
-### 수동 빌드
+1. `tmux`, `curl`, `git` 확인 및 시스템 패키지 설치
+2. Node.js / npm 확인 후 Claude Code CLI, Codex CLI 설치
+3. Rust toolchain 설치
+4. `cargo build --release`
+5. `~/.local/bin/ai` 설치
+6. `~/.ai-team/` 데이터 디렉토리 준비
+7. 선택적으로 `ai install` 실행
+
+### 수동 설치
 
 ```bash
 cargo build --release
+mkdir -p ~/.local/bin
 cp target/release/ai ~/.local/bin/ai
 ```
 
----
-
-## 사용법
-
-### 팀 세션
+`~/.local/bin`이 `PATH`에 없다면 셸 프로필에 아래를 추가합니다.
 
 ```bash
-# 현재 디렉토리로 팀 시작 (master Claude 자동 생성)
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+## 빠른 시작
+
+### 1. 프로젝트에서 팀 시작
+
+```bash
+cd /path/to/project
 ai team start
-
-# 특정 디렉토리로 시작
-ai team start /path/to/project
-
-# 세션 목록
-ai team list
-
-# 세션 중지
-ai team stop
-
-# 모든 세션 중지
-ai team stop-all
-
-# 기존 세션에 다시 연결
-ai team attach
 ```
 
-### 워커 생성
+### 2. 워커 스폰
 
 ```bash
-# Claude 워커 1개 + 작업 지정
-ai task spawn "Fix the login bug"
-
-# Codex 워커 (기본 모델)
-ai task spawn -t codex "Refactor the API"
-
-# Codex 5.4 모델로 워커 생성
-ai task spawn -t codex -m codex-5.4 "Optimize the query"
-
-# Claude 워커 3개 동시 스폰
-ai task spawn -t claude -n 3 "Write unit tests"
-
-# 마스터에 직접 메시지
-ai task master "Check worker progress"
-
-# 특정 워커에 메시지
-ai task send codex-1 "Also fix the edge case"
-
-# 모든 워커 정리
-ai task clean
+ai team start -t codex -m gpt-5.4
+ai task spawn -t codex -m gpt-5.3-codex "Fix the login bug"
+ai task spawn -t claude -n 2 "Write regression tests"
 ```
 
-### 모니터링 & 제어
+### 3. 상태 확인과 제어
 
 ```bash
-# 팀 상태
 ai ctl status
-
-# 에이전트 목록
-ai ctl roles
-
-# 에이전트 출력 보기
-ai ctl peek master
 ai ctl peek codex-1 -l 100
-
-# 에이전트에 메시지 보내기
-ai ctl send master "How is it going?"
-
-# 전체 브로드캐스트
-ai ctl broadcast "Stop and report"
-
-# 에이전트 중단 (Ctrl+C)
-ai ctl interrupt codex-1
+ai ctl send master "Summarize worker progress"
 ai ctl interrupt all
-
-# 모든 워커 킬
-ai ctl kill-workers
-
-# 로그 보기
-ai ctl log
-ai ctl log -f   # follow 모드
 ```
 
-### 웹 대시보드
+### 4. 웹 대시보드
 
 ```bash
-# 수동 실행 (기본 포트 7700)
 ai web
-
-# 포트 지정
-ai web -p 8080
-
-# macOS 서비스로 상시 실행 (로그인 시 자동 시작)
+# 또는 macOS 로그인 시 자동 실행
 ai install
-
-# 서비스 제거
-ai uninstall
 ```
 
-대시보드 주소: **http://localhost:7700**
+기본 주소는 [http://localhost:7700](http://localhost:7700) 입니다.
 
-대시보드에서 할 수 있는 것:
-- 세션 생성 / 중지
-- 워커 스폰 (타입, 모델, 수량 지정)
-- 에이전트 실시간 출력 확인
-- 에이전트에 메시지 전송
-- 개별 워커 중단 / 킬
-- 작업 로그 확인
-- 자동 새로고침 (3초 간격)
+## Master 운영 전략
 
----
+master는 기본적으로 `~/.ai-team/master-prompt.md`를 사용합니다. 파일이 없으면 첫 master 실행 시 제품 내장 기본 템플릿이 자동 생성됩니다.
+예전 기본 템플릿(`ai-task` / `ai-ctl` 구문을 쓰던 버전)이 남아 있으면 `.legacy.bak`로 백업한 뒤 새 템플릿으로 교체합니다.
 
-## 아키텍처
+기본 전략:
 
+- 같은 파일/모듈을 동시에 수정하는 워커를 만들지 않음
+- write ownership을 파일/디렉토리 단위로 명시함
+- 겹치는 변경은 병렬보다 순차 실행을 우선함
+- 구현 워커와 리뷰/검증 워커를 역할 분리함
+- 이미 같은 영역을 담당 중인 워커가 있으면 새 워커를 추가로 만들지 않고 follow-up을 보냄
+
+원하면 `~/.ai-team/master-prompt.md`를 직접 수정해 팀 운영 규칙을 커스터마이즈할 수 있습니다.
+
+## 중요한 동작 규칙
+
+- 세션 이름은 프로젝트 디렉토리명에서 자동 생성됩니다. 예: `/Users/ko/my-project` -> `ai-my-project`
+- `ai task *`와 `ai ctl *` 명령은 현재 작업 디렉토리 기준으로 세션을 찾습니다
+- 따라서 세션을 시작한 프로젝트 디렉토리 안에서 제어 명령을 실행하는 것이 기본 전제입니다
+- `ai team start -t <provider> -m <model>`로 master provider/model을 지정할 수 있습니다
+- CLI의 `ai task spawn`은 태스크 문구가 필수입니다
+- 웹 UI/API는 태스크 없이 idle worker를 띄우는 것도 허용합니다
+- `ai ctl interrupt all`과 `POST /api/interrupt`의 `target=all`은 master + 모든 worker에 Ctrl+C를 보냅니다. log pane은 제외됩니다
+
+## 저장 경로
+
+```text
+~/.ai-team/
+├── tasks/<session>/meta.json
+├── logs/<session>.log
+├── service/stdout.log
+├── service/stderr.log
+└── master-prompt.md
 ```
-ai (single binary, ~2.6MB)
-├── ai team start     → tmux session + master Claude
-├── ai task spawn     → tmux split-window + CLI agent
-├── ai ctl status     → read ~/.ai-team/meta.json
-├── ai web            → axum HTTP server + embedded HTML
-└── ai install        → macOS launchd plist
+
+- `meta.json`: 현재 세션의 pane/worker/task 상태
+- `logs/*.log`: task dispatch와 remote send 기록
+- `master-prompt.md`: 기본 master orchestration 규칙. 없으면 자동 생성
+
+## 문서 안내
+
+- [Getting Started](docs/getting-started.md): 설치부터 첫 세션 실행까지
+- [CLI Reference](docs/cli-reference.md): 모든 서브커맨드와 주의사항
+- [Web API Reference](docs/api-reference.md): 대시보드/API 연동용 엔드포인트
+- [Architecture](docs/architecture.md): 런타임 구조와 상태 모델
+- [Orchestration Guide](docs/orchestration-guide.md): master가 충돌 없이 워커를 배치하는 기본 전략
+- [Design Specification](docs/design-spec.md): 제품 목표, 범위, 제약
+- [Open Source Release](docs/open-source-release.md): 공개 배포 전 체크리스트와 네이밍 메모
+- [Troubleshooting](docs/troubleshooting.md): 자주 막히는 상황과 해결 방법
+- [Contributing](CONTRIBUTING.md): 로컬 개발/검증/PR 규칙
+
+## 품질 게이트
+
+로컬 기본 검증:
+
+```bash
+cargo fmt
+cargo test
+cargo clippy --all-targets --all-features -- -D warnings
+bash -n install.sh
 ```
 
-- **메타데이터**: `~/.ai-team/tasks/<session>/meta.json`
-- **로그**: `~/.ai-team/logs/<session>.log`
-- **서비스 로그**: `~/.ai-team/service/stdout.log`
+GitHub Actions CI 예시는 `.github/workflows/ci.yml`에 포함돼 있습니다.
 
-### 지원 에이전트 타입
+## 현재 제약
 
-| 타입 | CLI | 모델 지정 |
-|------|-----|-----------|
-| Claude | `claude` | `--model <model>` |
-| Codex | `codex` | `-m <model>` |
-
----
-
-## 전체 명령어 요약
-
-| 명령어 | 설명 |
-|--------|------|
-| `ai team start [dir]` | 팀 세션 시작 |
-| `ai team stop` | 세션 중지 |
-| `ai team stop-all` | 모든 세션 중지 |
-| `ai team list` | 세션 목록 |
-| `ai team attach` | 세션 재연결 |
-| `ai task spawn [-t type] [-m model] [-n count] "task"` | 워커 스폰 |
-| `ai task master "msg"` | 마스터에 메시지 |
-| `ai task send <name> "msg"` | 워커에 메시지 |
-| `ai task clean` | 워커 전체 제거 |
-| `ai ctl status` | 팀 상태 |
-| `ai ctl roles` | 에이전트 목록 |
-| `ai ctl peek <name>` | 출력 확인 |
-| `ai ctl send <name> "msg"` | 메시지 전송 |
-| `ai ctl broadcast "msg"` | 전체 전송 |
-| `ai ctl interrupt [name\|all]` | 중단 (Ctrl+C) |
-| `ai ctl kill-workers` | 워커 전체 킬 |
-| `ai ctl log [-f]` | 로그 확인 |
-| `ai web [-p port]` | 대시보드 실행 |
-| `ai install` | 서비스 설치 |
-| `ai uninstall` | 서비스 제거 |
+- 서비스 설치는 macOS `launchd`만 지원합니다
+- 실시간 출력 갱신은 WebSocket이 아니라 polling 기반입니다
+- `ai team stop-all`은 이름이 `ai-`로 시작하는 tmux 세션을 모두 종료합니다
+- Codex는 프로젝트별 trust 설정이 필요한데, `ai`가 스폰 시 해당 프로젝트를 자동으로 trusted로 등록합니다
+- Linux에서는 installer가 의존성 설치를 시도하지만 서비스 자동 설치는 아직 제공하지 않습니다

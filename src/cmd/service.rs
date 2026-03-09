@@ -76,7 +76,12 @@ pub fn install() -> Result<()> {
         .context("Failed to run launchctl")?;
 
     if status.success() {
-        println!("{}", "AI Team Web UI installed as background service.".green().bold());
+        println!(
+            "{}",
+            "AI Team Web UI installed as background service."
+                .green()
+                .bold()
+        );
         println!();
         println!("  Dashboard:  {}", "http://localhost:7700".cyan());
         println!("  Service:    {}", LABEL.dimmed());

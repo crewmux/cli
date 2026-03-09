@@ -23,6 +23,8 @@ pub struct PaneMeta {
     pub pane: String,
     #[serde(default)]
     pub r#type: Option<String>,
+    #[serde(default)]
+    pub model: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -69,8 +71,8 @@ pub fn log_path(session: &str) -> PathBuf {
 
 pub fn load_meta(session: &str) -> Result<TeamMeta> {
     let path = meta_path(session);
-    let data = fs::read_to_string(&path)
-        .with_context(|| format!("No metadata at {}", path.display()))?;
+    let data =
+        fs::read_to_string(&path).with_context(|| format!("No metadata at {}", path.display()))?;
     serde_json::from_str(&data).context("Failed to parse meta.json")
 }
 
@@ -117,6 +119,25 @@ pub fn resolve_pane(meta: &TeamMeta, target: &str) -> Option<String> {
         }
     }
     None
+}
+
+/// Resolve a worker target to its canonical name and metadata.
+/// Returns None when there is no match or the partial match is ambiguous.
+pub fn resolve_worker(meta: &TeamMeta, target: &str) -> Option<(String, WorkerMeta)> {
+    if let Some((name, worker)) = meta.workers.get_key_value(target) {
+        return Some((name.clone(), worker.clone()));
+    }
+
+    let mut matches = meta
+        .workers
+        .iter()
+        .filter(|(name, _)| name.contains(target));
+    let (name, worker) = matches.next()?;
+    if matches.next().is_some() {
+        return None;
+    }
+
+    Some((name.clone(), worker.clone()))
 }
 
 /// Get next worker name for a type (e.g. claude-1, claude-2, codex-1)
