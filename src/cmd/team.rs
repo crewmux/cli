@@ -54,11 +54,24 @@ fn cmd_start(dir: Option<String>, master_type: String, master_model: Option<Stri
     let session = meta::resolve_session_name(&project_dir);
 
     if tmux::has_session(&session) {
+        if meta::load_meta(&session).is_ok() {
+            println!(
+                "{}",
+                format!("Session '{}' already running. Attaching...", session).blue()
+            );
+            return tmux::attach(&session);
+        }
+
         println!(
             "{}",
-            format!("Session '{}' already running. Attaching...", session).blue()
+            format!(
+                "Session '{}' exists but has no recoverable metadata. Recreating...",
+                session
+            )
+            .yellow()
         );
-        return tmux::attach(&session);
+        tmux::kill_session(&session)?;
+        let _ = std::fs::remove_dir_all(meta::session_task_dir(&session));
     }
 
     println!(

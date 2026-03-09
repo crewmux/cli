@@ -1,5 +1,5 @@
 use crate::tmux;
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -140,9 +140,21 @@ fn session_storage_root(session: &str) -> PathBuf {
 
 pub fn load_meta(session: &str) -> Result<TeamMeta> {
     let path = meta_path(session);
-    let data =
-        fs::read_to_string(&path).with_context(|| format!("No metadata at {}", path.display()))?;
-    serde_json::from_str(&data).context("Failed to parse meta.json")
+    match fs::read_to_string(&path) {
+        Ok(data) => serde_json::from_str(&data).context("Failed to parse meta.json"),
+        Err(err) => {
+            if tmux::has_session(session) {
+                return recover_meta_from_tmux(session).with_context(|| {
+                    format!(
+                        "No metadata at {} and failed to recover session metadata",
+                        path.display()
+                    )
+                });
+            }
+
+            Err(err).with_context(|| format!("No metadata at {}", path.display()))
+        }
+    }
 }
 
 pub fn save_meta(session: &str, meta: &TeamMeta) -> Result<()> {
@@ -245,4 +257,77 @@ pub fn list_sessions() -> Result<Vec<(String, Option<TeamMeta>)>> {
     }
 
     Ok(sessions)
+}
+
+fn recover_meta_from_tmux(session: &str) -> Result<TeamMeta> {
+    let panes = tmux::list_panes(session)?;
+    if panes.is_empty() {
+        bail!("tmux session has no panes");
+    }
+
+    let recognized_layout = panes.iter().any(|pane| {
+        pane.title == "master"
+            || pane.title == "log"
+            || pane.title.starts_with("claude-")
+            || pane.title.starts_with("codex-")
+    });
+    if !recognized_layout {
+        bail!("tmux session does not look like a CrewMux session");
+    }
+
+    let project = panes[0].current_path.clone();
+    let master_pane = panes
+        .iter()
+        .find(|pane| pane.title == "master")
+        .cloned()
+        .unwrap_or_else(|| panes[0].clone());
+    let log_pane = panes
+        .iter()
+        .find(|pane| pane.title == "log")
+        .cloned()
+        .or_else(|| panes.iter().find(|pane| pane.id != master_pane.id).cloned())
+        .ok_or_else(|| anyhow::anyhow!("tmux session is missing a log pane"))?;
+
+    let mut workers = HashMap::new();
+    for pane in panes {
+        if pane.id == master_pane.id || pane.id == log_pane.id {
+            continue;
+        }
+
+        let title = pane.title.trim();
+        if title.is_empty() {
+            continue;
+        }
+
+        let worker_type = title.split('-').next().unwrap_or(title).to_string();
+        workers.insert(
+            title.to_string(),
+            WorkerMeta {
+                pane: pane.id,
+                r#type: worker_type,
+                model: None,
+            },
+        );
+    }
+
+    let meta = TeamMeta {
+        session: session.to_string(),
+        project,
+        started: chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string(),
+        master: PaneMeta {
+            pane: master_pane.id,
+            r#type: None,
+            model: None,
+        },
+        workers,
+        log: PaneMeta {
+            pane: log_pane.id,
+            r#type: None,
+            model: None,
+        },
+        last_task: None,
+        task_count: 0,
+    };
+    save_meta(session, &meta)?;
+    Ok(meta)
 }

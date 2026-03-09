@@ -1,6 +1,13 @@
 use anyhow::{bail, Context, Result};
 use std::process::Command;
 
+#[derive(Debug, Clone)]
+pub struct PaneInfo {
+    pub id: String,
+    pub title: String,
+    pub current_path: String,
+}
+
 fn tmux(args: &[&str]) -> Result<String> {
     let output = Command::new("tmux")
         .args(args)
@@ -35,7 +42,7 @@ pub fn new_session(session: &str, cwd: &str) -> Result<()> {
 }
 
 pub fn rename_window(session: &str, name: &str) -> Result<()> {
-    tmux(&["rename-window", "-t", &format!("{}:1", session), name])?;
+    tmux(&["rename-window", "-t", session, name])?;
     Ok(())
 }
 
@@ -45,13 +52,7 @@ pub fn set_option(session: &str, key: &str, value: &str) -> Result<()> {
 }
 
 pub fn current_pane_id(session: &str) -> Result<String> {
-    tmux(&[
-        "display-message",
-        "-t",
-        &format!("{}:1", session),
-        "-p",
-        "#{pane_id}",
-    ])
+    tmux(&["display-message", "-t", session, "-p", "#{pane_id}"])
 }
 
 pub fn select_pane_title(session: &str, pane: &str, title: &str) -> Result<()> {
@@ -111,8 +112,30 @@ pub fn split_window_vertical(
 }
 
 pub fn select_layout(session: &str, layout: &str) -> Result<()> {
-    let _ = tmux(&["select-layout", "-t", &format!("{}:1", session), layout]);
+    let _ = tmux(&["select-layout", "-t", session, layout]);
     Ok(())
+}
+
+pub fn list_panes(session: &str) -> Result<Vec<PaneInfo>> {
+    let out = tmux(&[
+        "list-panes",
+        "-t",
+        session,
+        "-F",
+        "#{pane_id}\t#{pane_title}\t#{pane_current_path}",
+    ])?;
+
+    Ok(out
+        .lines()
+        .filter_map(|line| {
+            let mut parts = line.splitn(3, '\t');
+            Some(PaneInfo {
+                id: parts.next()?.to_string(),
+                title: parts.next()?.to_string(),
+                current_path: parts.next()?.to_string(),
+            })
+        })
+        .collect())
 }
 
 pub fn select_pane(session: &str, pane: &str) -> Result<()> {

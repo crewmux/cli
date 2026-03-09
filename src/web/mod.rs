@@ -234,11 +234,16 @@ async fn api_create_session(
     let session = meta::resolve_session_name(&project_dir);
 
     if tmux::has_session(&session) {
-        return Ok(Json(ApiResult {
-            ok: true,
-            message: format!("Session '{}' already exists", session),
-            session: Some(session),
-        }));
+        if meta::load_meta(&session).is_ok() {
+            return Ok(Json(ApiResult {
+                ok: true,
+                message: format!("Session '{}' already exists", session),
+                session: Some(session),
+            }));
+        }
+
+        tmux::kill_session(&session).map_err(err500)?;
+        let _ = std::fs::remove_dir_all(meta::session_task_dir(&session));
     }
 
     // Create directories
