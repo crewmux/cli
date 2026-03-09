@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Team Controller</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --surface2: #1c2129; --border: #30363d;
+    --text: #e6edf3; --text-dim: #8b949e; --accent: #58a6ff;
+    --green: #3fb950; --red: #f85149; --yellow: #d29922; --cyan: #39d2c0;
+    --purple: #bc8cff; --orange: #f0883e;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: -apple-system, 'SF Mono', 'Fira Code', monospace; background:var(--bg); color:var(--text); min-height:100vh; }
+
+  /* Topbar */
+  .topbar { display:flex; align-items:center; justify-content:space-between; padding:12px 24px; border-bottom:1px solid var(--border); background:var(--surface); position:sticky; top:0; z-index:10; }
+  .topbar h1 { font-size:16px; font-weight:600; }
+  .topbar h1 span { color:var(--accent); }
+  .top-right { display:flex; align-items:center; gap:16px; }
+  .status-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px; animation: pulse 2s infinite; }
+  .status-dot.on { background:var(--green); }
+  .status-dot.off { background:var(--yellow); }
+  .status-dot.err { background:var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .container { max-width:1440px; margin:0 auto; padding:20px; }
+
+  /* Session cards row */
+  .sessions-row { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; align-items:center; }
+  .session-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 16px; cursor:pointer; transition:all .15s; min-width:200px; position:relative; }
+  .session-card:hover { border-color:var(--accent); }
+  .session-card.active { border-color:var(--accent); background:rgba(88,166,255,0.06); }
+  .session-card .sc-name { font-weight:600; font-size:14px; color:var(--accent); }
+  .session-card .sc-detail { font-size:11px; color:var(--text-dim); margin-top:4px; }
+  .session-card .sc-workers { font-size:12px; color:var(--green); margin-top:2px; }
+  .session-card .sc-close { position:absolute; top:8px; right:10px; background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:14px; padding:2px 6px; border-radius:4px; }
+  .session-card .sc-close:hover { background:var(--red); color:#fff; }
+  .new-session-card { background:var(--surface); border:2px dashed var(--border); border-radius:10px; padding:12px 16px; cursor:pointer; transition:all .15s; min-width:200px; display:flex; align-items:center; justify-content:center; gap:8px; color:var(--text-dim); font-size:13px; }
+  .new-session-card:hover { border-color:var(--accent); color:var(--accent); }
+
+  /* Modal */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:50; align-items:center; justify-content:center; }
+  .modal-overlay.show { display:flex; }
+  .modal { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:28px; width:440px; max-width:90vw; }
+  .modal h2 { font-size:16px; margin-bottom:16px; }
+  .modal input { width:100%; background:var(--bg); color:var(--text); border:1px solid var(--border); padding:10px 14px; border-radius:8px; font-family:inherit; font-size:14px; margin-bottom:12px; }
+  .modal input:focus { outline:none; border-color:var(--accent); }
+  .modal-actions { display:flex; gap:8px; justify-content:flex-end; }
+
+  /* Main grid */
+  .grid { display:grid; grid-template-columns:300px 1fr; gap:20px; }
+  @media(max-width:900px) { .grid { grid-template-columns:1fr; } }
+
+  /* Panel */
+  .panel { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+  .panel + .panel { margin-top:14px; }
+  .panel-header { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .panel-header h2 { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-dim); }
+  .panel-body { padding:14px; }
+
+  /* Agent list */
+  .agent { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-radius:8px; margin-bottom:6px; cursor:pointer; transition:background .15s; border:1px solid transparent; }
+  .agent:hover { background:rgba(88,166,255,0.06); }
+  .agent.active { background:rgba(88,166,255,0.1); border-color:var(--accent); }
+  .agent-left { display:flex; align-items:center; gap:8px; }
+  .agent-dot { width:6px; height:6px; border-radius:50%; }
+  .agent-dot.claude { background:var(--accent); }
+  .agent-dot.codex { background:var(--cyan); }
+  .agent-name { font-weight:600; font-size:13px; }
+  .agent-meta { font-size:11px; color:var(--text-dim); }
+  .agent-actions { display:flex; gap:4px; opacity:0; transition:opacity .15s; }
+  .agent:hover .agent-actions { opacity:1; }
+  .agent-btn { background:none; border:1px solid var(--border); color:var(--text-dim); padding:2px 6px; border-radius:4px; cursor:pointer; font-size:11px; font-family:inherit; }
+  .agent-btn:hover { border-color:var(--text); color:var(--text); }
+  .agent-btn.kill:hover { border-color:var(--red); color:var(--red); }
+
+  /* Spawn form */
+  .form-row { display:flex; gap:6px; margin-bottom:6px; }
+  .form-row select, .form-row input { background:var(--bg); color:var(--text); border:1px solid var(--border); padding:7px 10px; border-radius:6px; font-family:inherit; font-size:12px; flex:1; }
+  .form-row select:focus, .form-row input:focus { outline:none; border-color:var(--accent); }
+  .form-row input::placeholder { color:var(--text-dim); }
+
+  /* Buttons */
+  .btn { padding:7px 14px; border-radius:6px; border:none; font-family:inherit; font-size:12px; font-weight:500; cursor:pointer; transition:all .15s; display:inline-flex; align-items:center; gap:4px; }
+  .btn-primary { background:var(--accent); color:#000; }
+  .btn-primary:hover { background:#79c0ff; }
+  .btn-danger { background:rgba(248,81,73,0.15); color:var(--red); border:1px solid rgba(248,81,73,0.3); }
+  .btn-danger:hover { background:var(--red); color:#fff; }
+  .btn-warn { background:rgba(210,153,34,0.15); color:var(--yellow); border:1px solid rgba(210,153,34,0.3); }
+  .btn-warn:hover { background:var(--yellow); color:#000; }
+  .btn-sm { padding:4px 8px; font-size:11px; }
+  .btn-ghost { background:transparent; border:1px solid var(--border); color:var(--text-dim); }
+  .btn-ghost:hover { border-color:var(--text); color:var(--text); }
+
+  /* Terminal */
+  .terminal { background:#000; border-radius:8px; padding:14px; font-size:12px; line-height:1.6; white-space:pre-wrap; word-break:break-all; max-height:520px; overflow-y:auto; color:#ccc; font-family:'SF Mono','Fira Code',monospace; }
+  .terminal::-webkit-scrollbar { width:5px; }
+  .terminal::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+  /* Send bar */
+  .send-bar { display:flex; gap:8px; margin-top:12px; }
+  .send-bar input { flex:1; background:var(--bg); color:var(--text); border:1px solid var(--border); padding:9px 12px; border-radius:8px; font-family:inherit; font-size:13px; }
+  .send-bar input:focus { outline:none; border-color:var(--accent); }
+
+  /* Quick actions */
+  .quick-actions { display:flex; gap:6px; flex-wrap:wrap; }
+
+  /* Toast */
+  .toast { position:fixed; bottom:24px; right:24px; background:var(--surface); border:1px solid var(--border); padding:10px 18px; border-radius:8px; font-size:12px; opacity:0; transition:opacity .3s; pointer-events:none; z-index:100; }
+  .toast.show { opacity:1; }
+  .toast.success { border-color:var(--green); color:var(--green); }
+  .toast.error { border-color:var(--red); color:var(--red); }
+
+  .empty { color:var(--text-dim); text-align:center; padding:30px; font-size:13px; }
+
+  .log-viewer { background:#000; border-radius:8px; padding:12px; font-size:11px; line-height:1.8; max-height:180px; overflow-y:auto; color:var(--text-dim); font-family:'SF Mono','Fira Code',monospace; }
+
+  /* No session state */
+  .welcome { text-align:center; padding:80px 20px; }
+  .welcome h2 { font-size:24px; margin-bottom:12px; }
+  .welcome p { color:var(--text-dim); font-size:14px; margin-bottom:24px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1><span>AI</span> Team Controller</h1>
+  <div class="top-right">
+    <span><span class="status-dot off" id="statusDot"></span><span id="statusText">connecting...</span></span>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Session cards -->
+  <div class="sessions-row" id="sessionsRow">
+    <div class="new-session-card" onclick="showCreateModal()">+ New Session</div>
+  </div>
+
+  <!-- Main content (hidden until session selected) -->
+  <div id="mainContent" style="display:none">
+    <div class="grid">
+      <!-- Left sidebar -->
+      <div>
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Agents</h2>
+            <span id="agentCount" style="font-size:11px;color:var(--text-dim)"></span>
+          </div>
+          <div class="panel-body" id="agentList"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h2>Spawn Worker</h2></div>
+          <div class="panel-body">
+            <div class="form-row">
+              <select id="spawnType">
+                <option value="claude">Claude</option>
+                <option value="codex">Codex</option>
+              </select>
+              <input id="spawnModel" placeholder="model (codex-5.4, o3...)">
+            </div>
+            <div class="form-row">
+              <select id="spawnCount">
+                <option value="1">1 worker</option>
+                <option value="2">2 workers</option>
+                <option value="3">3 workers</option>
+                <option value="4">4 workers</option>
+                <option value="5">5 workers</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <input id="spawnTask" placeholder="Task to dispatch..." onkeydown="if(event.key==='Enter')spawnWorker()">
+            </div>
+            <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="spawnWorker()">Spawn &amp; Dispatch</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h2>Actions</h2></div>
+          <div class="panel-body quick-actions">
+            <button class="btn btn-warn btn-sm" onclick="interruptAll()">Interrupt All</button>
+            <button class="btn btn-danger btn-sm" onclick="killWorkers()">Kill Workers</button>
+            <button class="btn btn-danger btn-sm" onclick="stopSession()">Stop Session</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: terminal + log -->
+      <div>
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Output: <span id="peekTarget" style="color:var(--accent)">master</span></h2>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-ghost btn-sm" onclick="peekAgent()">Refresh</button>
+              <button class="btn btn-ghost btn-sm" id="autoRefreshBtn" onclick="toggleAutoRefresh()">Auto: OFF</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="terminal" id="terminal">Select an agent to view output</div>
+            <div class="send-bar">
+              <input id="sendMessage" placeholder="Send message..." onkeydown="if(event.key==='Enter')sendMessage()">
+              <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Task Log</h2>
+            <button class="btn btn-ghost btn-sm" onclick="refreshLog()">Refresh</button>
+          </div>
+          <div class="panel-body">
+            <div class="log-viewer" id="logViewer">No log data</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Welcome (no session) -->
+  <div id="welcomeContent">
+    <div class="welcome">
+      <h2>No active sessions</h2>
+      <p>Create a new session to start managing your AI team.</p>
+      <button class="btn btn-primary" onclick="showCreateModal()" style="font-size:14px;padding:10px 24px">+ New Session</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create session modal -->
+<div class="modal-overlay" id="createModal">
+  <div class="modal">
+    <h2>Create New Session</h2>
+    <input id="newProjectDir" placeholder="Project directory path (e.g. /Users/you/project)" autofocus onkeydown="if(event.key==='Enter')createSession()">
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="hideCreateModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="createSession()">Create</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var currentSession = '';
+var currentTarget = 'master';
+var autoRefreshInterval = null;
+
+async function api(path, opts) {
+  var res = await fetch(path, opts);
+  if (!res.ok) { var t = await res.text(); throw new Error(t); }
+  var ct = res.headers.get('content-type');
+  if (ct && ct.includes('json')) return res.json();
+  return res.text();
+}
+
+function toast(msg, type) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + (type || 'success');
+  setTimeout(function() { el.className = 'toast'; }, 2500);
+}
+
+function showCreateModal() {
+  document.getElementById('createModal').classList.add('show');
+  document.getElementById('newProjectDir').focus();
+}
+function hideCreateModal() {
+  document.getElementById('createModal').classList.remove('show');
+}
+
+// --- Sessions ---
+async function refreshSessions() {
+  try {
+    var sessions = await api('/api/sessions');
+    var row = document.getElementById('sessionsRow');
+    row.replaceChildren();
+
+    sessions.forEach(function(s) {
+      var card = document.createElement('div');
+      card.className = 'session-card' + (currentSession === s.name ? ' active' : '');
+      card.addEventListener('click', function(e) {
+        if (e.target.classList.contains('sc-close')) return;
+        selectSession(s.name);
+      });
+
+      var nameEl = document.createElement('div');
+      nameEl.className = 'sc-name';
+      nameEl.textContent = s.name;
+      card.appendChild(nameEl);
+
+      if (s.project) {
+        var detail = document.createElement('div');
+        detail.className = 'sc-detail';
+        detail.textContent = s.project;
+        card.appendChild(detail);
+      }
+
+      var workers = document.createElement('div');
+      workers.className = 'sc-workers';
+      workers.textContent = (s.worker_count || 0) + ' worker(s)';
+      card.appendChild(workers);
+
+      var closeBtn = document.createElement('button');
+      closeBtn.className = 'sc-close';
+      closeBtn.textContent = '\u00d7';
+      closeBtn.title = 'Stop session';
+      closeBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        stopSessionByName(s.name);
+      });
+      card.appendChild(closeBtn);
+
+      row.appendChild(card);
+    });
+
+    var newCard = document.createElement('div');
+    newCard.className = 'new-session-card';
+    newCard.textContent = '+ New Session';
+    newCard.addEventListener('click', showCreateModal);
+    row.appendChild(newCard);
+
+    // Toggle views
+    if (sessions.length === 0) {
+      document.getElementById('mainContent').style.display = 'none';
+      document.getElementById('welcomeContent').style.display = 'block';
+      currentSession = '';
+    } else {
+      document.getElementById('welcomeContent').style.display = 'none';
+      if (!currentSession && sessions.length > 0) {
+        selectSession(sessions[0].name);
+      } else if (currentSession && !sessions.find(function(s){return s.name===currentSession;})) {
+        selectSession(sessions[0].name);
+      }
+    }
+
+    document.getElementById('statusDot').className = 'status-dot ' + (sessions.length > 0 ? 'on' : 'off');
+    document.getElementById('statusText').textContent = sessions.length + ' session(s)';
+  } catch(e) {
+    document.getElementById('statusDot').className = 'status-dot err';
+    document.getElementById('statusText').textContent = 'disconnected';
+  }
+}
+
+function selectSession(name) {
+  currentSession = name;
+  currentTarget = 'master';
+  document.getElementById('mainContent').style.display = 'block';
+  document.getElementById('welcomeContent').style.display = 'none';
+  document.getElementById('peekTarget').textContent = 'master';
+
+  document.querySelectorAll('.session-card').forEach(function(c) {
+    c.classList.toggle('active', c.querySelector('.sc-name') && c.querySelector('.sc-name').textContent === name);
+  });
+
+  refreshStatus();
+  peekAgent();
+  refreshLog();
+}
+
+async function createSession() {
+  var dir = document.getElementById('newProjectDir').value.trim();
+  if (!dir) { toast('Path required', 'error'); return; }
+
+  try {
+    var res = await api('/api/sessions/create', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ project_dir: dir })
+    });
+    toast(res.message);
+    hideCreateModal();
+    document.getElementById('newProjectDir').value = '';
+    await refreshSessions();
+  } catch(e) {
+    toast('Failed: ' + e.message, 'error');
+  }
+}
+
+async function stopSessionByName(name) {
+  if (!confirm('Stop session ' + name + '?')) return;
+  try {
+    await api('/api/sessions/' + name, { method: 'DELETE' });
+    toast('Session stopped');
+    if (currentSession === name) currentSession = '';
+    await refreshSessions();
+  } catch(e) {
+    toast('Failed: ' + e.message, 'error');
+  }
+}
+
+async function stopSession() {
+  if (!currentSession) return;
+  await stopSessionByName(currentSession);
+}
+
+// --- Agents ---
+function createAgentElement(name, agentType, model, isActive) {
+  var div = document.createElement('div');
+  div.className = 'agent' + (isActive ? ' active' : '');
+  div.dataset.name = name;
+
+  var left = document.createElement('div');
+  left.className = 'agent-left';
+
+  var dot = document.createElement('span');
+  dot.className = 'agent-dot ' + agentType;
+  left.appendChild(dot);
+
+  var info = document.createElement('div');
+  var nameSpan = document.createElement('div');
+  nameSpan.className = 'agent-name';
+  nameSpan.textContent = name;
+  info.appendChild(nameSpan);
+
+  var metaStr = agentType;
+  if (model) metaStr += ' / ' + model;
+  var metaSpan = document.createElement('div');
+  metaSpan.className = 'agent-meta';
+  metaSpan.textContent = metaStr;
+  info.appendChild(metaSpan);
+
+  left.appendChild(info);
+  div.appendChild(left);
+
+  if (name !== 'master') {
+    var actions = document.createElement('div');
+    actions.className = 'agent-actions';
+
+    var intBtn = document.createElement('button');
+    intBtn.className = 'agent-btn';
+    intBtn.textContent = 'stop';
+    intBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      interruptAgent(name);
+    });
+    actions.appendChild(intBtn);
+
+    var killBtn = document.createElement('button');
+    killBtn.className = 'agent-btn kill';
+    killBtn.textContent = 'kill';
+    killBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      killAgent(name);
+    });
+    actions.appendChild(killBtn);
+
+    div.appendChild(actions);
+  }
+
+  div.addEventListener('click', function() { selectAgent(name); });
+  return div;
+}
+
+async function refreshStatus() {
+  if (!currentSession) return;
+  try {
+    var st = await api('/api/status/' + currentSession);
+
+    var container = document.getElementById('agentList');
+    container.replaceChildren();
+    container.appendChild(createAgentElement('master', st.master.agent_type, null, currentTarget === 'master'));
+    st.workers.forEach(function(w) {
+      container.appendChild(createAgentElement(w.name, w.agent_type, w.model, currentTarget === w.name));
+    });
+    document.getElementById('agentCount').textContent = (1 + st.workers.length) + ' agents';
+  } catch(e) {
+    var c = document.getElementById('agentList');
+    c.replaceChildren();
+    var empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = 'Failed to load';
+    c.appendChild(empty);
+  }
+}
+
+function selectAgent(name) {
+  currentTarget = name;
+  document.getElementById('peekTarget').textContent = name;
+  document.querySelectorAll('.agent').forEach(function(el) {
+    el.classList.toggle('active', el.dataset.name === name);
+  });
+  peekAgent();
+}
+
+async function peekAgent() {
+  if (!currentSession || !currentTarget) return;
+  try {
+    var text = await api('/api/peek/' + currentSession + '/' + currentTarget + '?lines=100');
+    var el = document.getElementById('terminal');
+    el.textContent = text || '(empty)';
+    el.scrollTop = el.scrollHeight;
+  } catch(e) {
+    document.getElementById('terminal').textContent = 'Error: ' + e.message;
+  }
+}
+
+async function sendMessage() {
+  var input = document.getElementById('sendMessage');
+  var msg = input.value.trim();
+  if (!msg || !currentSession) return;
+  try {
+    await api('/api/send', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ session: currentSession, target: currentTarget, message: msg })
+    });
+    toast('Sent to ' + currentTarget);
+    input.value = '';
+    setTimeout(peekAgent, 1000);
+  } catch(e) {
+    toast('Send failed: ' + e.message, 'error');
+  }
+}
+
+async function spawnWorker() {
+  if (!currentSession) { toast('Select a session first', 'error'); return; }
+  var wtype = document.getElementById('spawnType').value;
+  var model = document.getElementById('spawnModel').value.trim() || null;
+  var count = parseInt(document.getElementById('spawnCount').value);
+  var task = document.getElementById('spawnTask').value.trim();
+
+  try {
+    var res = await api('/api/spawn', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ session: currentSession, worker_type: wtype, model: model, count: count, task: task || '' })
+    });
+    toast(res.message);
+    document.getElementById('spawnTask').value = '';
+    setTimeout(function() { refreshStatus(); refreshSessions(); }, 2000);
+  } catch(e) {
+    toast('Spawn failed: ' + e.message, 'error');
+  }
+}
+
+async function interruptAll() {
+  if (!currentSession) return;
+  try {
+    await api('/api/interrupt', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ session: currentSession, target: 'all' })
+    });
+    toast('Interrupted all');
+  } catch(e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+async function interruptAgent(name) {
+  if (!currentSession) return;
+  try {
+    await api('/api/interrupt', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ session: currentSession, target: name })
+    });
+    toast('Interrupted ' + name);
+  } catch(e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+async function killAgent(name) {
+  if (!currentSession) return;
+  try {
+    await api('/api/kill-agent', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ session: currentSession, target: name })
+    });
+    toast('Killed ' + name);
+    setTimeout(refreshStatus, 500);
+  } catch(e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+async function killWorkers() {
+  if (!currentSession) return;
+  if (!confirm('Kill all workers?')) return;
+  try {
+    await api('/api/kill-workers', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ session: currentSession })
+    });
+    toast('All workers killed');
+    setTimeout(function() { refreshStatus(); refreshSessions(); }, 1000);
+  } catch(e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+function toggleAutoRefresh() {
+  var btn = document.getElementById('autoRefreshBtn');
+  if (autoRefreshInterval) {
+    clearInterval(autoRefreshInterval);
+    autoRefreshInterval = null;
+    btn.textContent = 'Auto: OFF';
+  } else {
+    autoRefreshInterval = setInterval(function() {
+      peekAgent();
+      refreshStatus();
+      refreshLog();
+    }, 3000);
+    btn.textContent = 'Auto: ON';
+    btn.style.borderColor = 'var(--green)';
+    btn.style.color = 'var(--green)';
+  }
+}
+
+async function refreshLog() {
+  if (!currentSession) return;
+  try {
+    var text = await api('/api/peek/' + currentSession + '/log?lines=30');
+    document.getElementById('logViewer').textContent = text || '(empty)';
+  } catch(e) { /* ignore */ }
+}
+
+// Close modal on overlay click
+document.getElementById('createModal').addEventListener('click', function(e) {
+  if (e.target === this) hideCreateModal();
+});
+
+// Init
+refreshSessions();
+setInterval(refreshSessions, 8000);
+</script>
+</body>
+</html>
