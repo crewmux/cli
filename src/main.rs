@@ -5,10 +5,10 @@ mod prompt;
 mod tmux;
 mod web;
 
-use clap::{CommandFactory, FromArgMatches, Parser, Subcommand};
+use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
-#[command(about = "CrewMux", version)]
+#[command(name = "crewmux", about = "CrewMux", version)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -45,7 +45,7 @@ enum Commands {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let cli = parse_cli()?;
+    let cli = Cli::parse();
 
     match cli.command {
         Commands::Team { action } => cmd::team::run(action)?,
@@ -57,22 +57,4 @@ async fn main() -> anyhow::Result<()> {
     }
 
     Ok(())
-}
-
-fn parse_cli() -> anyhow::Result<Cli> {
-    let mut command = Cli::command();
-
-    if let Some(bin_name) = current_bin_name() {
-        let leaked_name: &'static str = Box::leak(bin_name.into_boxed_str());
-        command = command.name(leaked_name);
-    }
-
-    let matches = command.get_matches();
-    Ok(Cli::from_arg_matches(&matches)?)
-}
-
-fn current_bin_name() -> Option<String> {
-    let arg0 = std::env::args_os().next()?;
-    let name = std::path::Path::new(&arg0).file_stem()?;
-    Some(name.to_string_lossy().into_owned())
 }

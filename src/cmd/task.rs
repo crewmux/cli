@@ -55,7 +55,7 @@ pub fn run(action: TaskAction) -> Result<()> {
 fn ensure_session() -> Result<String> {
     let session = meta::resolve_session_name_cwd();
     if !tmux::has_session(&session) {
-        bail!("No active team session. Run 'cm team start' first.");
+        bail!("No active team session. Run 'crewmux team start' first.");
     }
     Ok(session)
 }
@@ -102,7 +102,7 @@ fn spawn_worker(
 
 fn cmd_spawn(worker_type: String, model: Option<String>, count: u32, task: String) -> Result<()> {
     if task.is_empty() {
-        bail!("Task message is required. Usage: cm task spawn -t codex -m gpt-5.3-codex \"your task\"");
+        bail!("Task message is required. Usage: crewmux task spawn -t codex -m gpt-5.3-codex \"your task\"");
     }
 
     let session = ensure_session()?;
@@ -180,7 +180,7 @@ fn cmd_send(target: String, message: String) -> Result<()> {
             meta::append_log(&session, &format!("DIRECT [{}] {}", target, message))?;
             println!("{}", format!("Sent to {}.", target).green());
         }
-        None => bail!("Unknown target: {}. Use 'cm ctl roles'.", target),
+        None => bail!("Unknown target: {}. Use 'crewmux ctl roles'.", target),
     }
     Ok(())
 }

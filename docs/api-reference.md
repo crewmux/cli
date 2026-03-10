@@ -7,7 +7,7 @@ Base URL: `http://localhost:7700`
 - 대부분의 응답은 JSON입니다
 - `GET /api/peek/...`만 plain text를 반환합니다
 - 오류 응답은 `400`, `404`, `500`과 함께 plain text 메시지를 반환합니다
-- session 이름은 CLI와 동일하게 기본적으로 `cm-<project-basename>` 규칙을 따릅니다
+- session 이름은 CLI와 동일하게 기본적으로 `crewmux-<project-basename>` 규칙을 따릅니다
 
 ## Sessions
 
@@ -17,7 +17,7 @@ Base URL: `http://localhost:7700`
 
 특징:
 
-- `cm-`로 시작하는 tmux 세션과 legacy `ai-` 세션만 노출됩니다
+- `crewmux-`로 시작하는 tmux 세션과 legacy `cm-`, `ai-` 세션만 노출됩니다
 - 이전 이력이나 inactive 세션은 포함되지 않습니다
 
 응답 예시:
@@ -25,7 +25,7 @@ Base URL: `http://localhost:7700`
 ```json
 [
   {
-    "name": "cm-my-project",
+    "name": "crewmux-my-project",
     "project": "/Users/ko/my-project",
     "worker_count": 2,
     "started": "2026-03-09T10:00:00Z",
@@ -61,8 +61,8 @@ Base URL: `http://localhost:7700`
 ```json
 {
   "ok": true,
-  "message": "Session 'cm-my-project' created",
-  "session": "cm-my-project"
+  "message": "Session 'crewmux-my-project' created",
+  "session": "crewmux-my-project"
 }
 ```
 
@@ -77,7 +77,7 @@ Base URL: `http://localhost:7700`
 
 ### `POST /api/sessions/stop-all`
 
-이름이 `cm-` 또는 legacy `ai-`로 시작하는 모든 활성 세션을 중지합니다.
+이름이 `crewmux-` 또는 legacy `cm-`, `ai-`로 시작하는 모든 활성 세션을 중지합니다.
 
 ## Status & Output
 
@@ -89,7 +89,7 @@ Base URL: `http://localhost:7700`
 
 ```json
 {
-  "session": "cm-my-project",
+  "session": "crewmux-my-project",
   "project": "/Users/ko/my-project",
   "started": "2026-03-09T10:00:00Z",
   "last_task": "Fix the auth bug",
@@ -141,7 +141,7 @@ tmux pane 출력을 캡처합니다.
 
 ```json
 {
-  "session": "cm-my-project",
+  "session": "crewmux-my-project",
   "target": "codex-1",
   "message": "Also fix the edge case"
 }
@@ -157,7 +157,7 @@ tmux pane 출력을 캡처합니다.
 
 ```json
 {
-  "session": "cm-my-project",
+  "session": "crewmux-my-project",
   "worker_type": "codex",
   "model": "gpt-5.3-codex",
   "count": 2,
@@ -186,7 +186,7 @@ tmux pane 출력을 캡처합니다.
 
 ```json
 {
-  "session": "cm-my-project",
+  "session": "crewmux-my-project",
   "target": "all"
 }
 ```
@@ -205,7 +205,7 @@ tmux pane 출력을 캡처합니다.
 
 ```json
 {
-  "session": "cm-my-project"
+  "session": "crewmux-my-project"
 }
 ```
 
@@ -217,7 +217,7 @@ tmux pane 출력을 캡처합니다.
 
 ```json
 {
-  "session": "cm-my-project",
+  "session": "crewmux-my-project",
   "target": "codex-1"
 }
 ```
@@ -236,7 +236,7 @@ tmux pane 출력을 캡처합니다.
 
 ```json
 {
-  "session": "cm-my-project",
+  "session": "crewmux-my-project",
   "target": "master"
 }
 ```

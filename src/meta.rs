@@ -7,8 +7,8 @@ use std::path::PathBuf;
 
 const TEAM_DIR_NAME: &str = ".crewmux";
 const LEGACY_TEAM_DIR_NAME: &str = ".ai-team";
-const SESSION_PREFIX: &str = "cm";
-const LEGACY_SESSION_PREFIX: &str = "ai";
+const SESSION_PREFIX: &str = "crewmux";
+const LEGACY_SESSION_PREFIXES: &[&str] = &["cm", "ai"];
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TeamMeta {
@@ -66,10 +66,6 @@ pub fn session_name(dir: &str) -> String {
     format!("{}-{}", SESSION_PREFIX, session_basename(dir))
 }
 
-pub fn legacy_session_name(dir: &str) -> String {
-    format!("{}-{}", LEGACY_SESSION_PREFIX, session_basename(dir))
-}
-
 pub fn resolve_session_name(dir: &str) -> String {
     for session in session_candidates(dir) {
         if tmux::has_session(&session) {
@@ -102,8 +98,16 @@ fn session_basename(dir: &str) -> String {
     base.replace([' ', '.'], "-")
 }
 
-fn session_candidates(dir: &str) -> [String; 2] {
-    [session_name(dir), legacy_session_name(dir)]
+fn session_candidates(dir: &str) -> Vec<String> {
+    let basename = session_basename(dir);
+    let mut candidates = Vec::with_capacity(1 + LEGACY_SESSION_PREFIXES.len());
+    candidates.push(format!("{}-{}", SESSION_PREFIX, basename));
+    candidates.extend(
+        LEGACY_SESSION_PREFIXES
+            .iter()
+            .map(|prefix| format!("{}-{}", prefix, basename)),
+    );
+    candidates
 }
 
 fn session_storage_root(session: &str) -> PathBuf {

@@ -147,11 +147,11 @@ fn cmd_start(dir: Option<String>, master_type: String, master_model: Option<Stri
     println!();
     println!(
         "  {} \"your task\"    Spawn workers",
-        "cm task spawn".bold()
+        "crewmux task spawn".bold()
     );
     println!(
         "  {}               Check team status",
-        "cm ctl status".bold()
+        "crewmux ctl status".bold()
     );
     println!();
 
@@ -221,7 +221,10 @@ fn cmd_attach(dir: Option<String>) -> Result<()> {
     if tmux::has_session(&session) {
         tmux::attach(&session)?;
     } else {
-        println!("{}", "No active session. Run 'cm team start' first.".red());
+        println!(
+            "{}",
+            "No active session. Run 'crewmux team start' first.".red()
+        );
     }
     Ok(())
 }

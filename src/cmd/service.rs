@@ -12,7 +12,7 @@ fn plist_path() -> PathBuf {
         .join(format!("{}.plist", LABEL))
 }
 
-fn cm_binary_path() -> Result<PathBuf> {
+fn binary_path() -> Result<PathBuf> {
     std::env::current_exe().context("Cannot determine binary path")
 }
 
@@ -21,7 +21,7 @@ fn log_dir() -> PathBuf {
 }
 
 pub fn install() -> Result<()> {
-    let bin = cm_binary_path()?;
+    let bin = binary_path()?;
     let plist = plist_path();
     let logs = log_dir();
 
@@ -89,7 +89,7 @@ pub fn install() -> Result<()> {
         println!("  Logs:       {}", logs.display().to_string().dimmed());
         println!();
         println!("  Starts automatically on login.");
-        println!("  Uninstall:  {}", "cm uninstall".bold());
+        println!("  Uninstall:  {}", "crewmux uninstall".bold());
     } else {
         println!("{}", "Failed to load service.".red());
     }

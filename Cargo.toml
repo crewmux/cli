@@ -2,11 +2,11 @@
 name = "crewmux"
 version = "0.1.0"
 edition = "2021"
-default-run = "cm"
+default-run = "crewmux"
 description = "CrewMux - manage AI agent teams via tmux"
 
 [[bin]]
-name = "cm"
+name = "crewmux"
 path = "src/main.rs"
 
 [dependencies]
