@@ -8,12 +8,12 @@ fi
 
 VERSION="$1"
 SHA256="$2"
-URL="${3:-https://github.com/crewmux/client/archive/refs/tags/v${VERSION}.tar.gz}"
+URL="${3:-https://github.com/crewmux/cli/archive/refs/tags/v${VERSION}.tar.gz}"
 
 cat <<EOF
 class Crewmux < Formula
   desc "Multi-agent orchestration for tmux-powered teams"
-  homepage "https://github.com/crewmux/client"
+  homepage "https://github.com/crewmux/cli"
   url "${URL}"
   sha256 "${SHA256}"
   version "${VERSION}"

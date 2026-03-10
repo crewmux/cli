@@ -9,7 +9,7 @@
 
 ## 저장소 구조
 
-- 메인 코드: `crewmux/client`
+- 메인 코드: `crewmux/cli`
 - Homebrew tap: `crewmux/homebrew-tap`
 
 Homebrew tap 이름은 `crewmux/tap`으로 노출되고, 실제 GitHub 저장소 이름은 `homebrew-tap`입니다.
@@ -49,7 +49,7 @@ shasum -a 256 crewmux-0.1.0.tar.gz
 기본 URL은:
 
 ```text
-https://github.com/crewmux/client/archive/refs/tags/v<version>.tar.gz
+https://github.com/crewmux/cli/archive/refs/tags/v<version>.tar.gz
 ```
 
 ## tap 업데이트
