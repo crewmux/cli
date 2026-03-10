@@ -106,6 +106,32 @@
     font-size: 12px;
   }
 
+  .lang-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: rgba(19, 27, 37, 0.9);
+  }
+
+  .lang-btn {
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .lang-btn.active {
+    background: rgba(108, 182, 255, 0.18);
+    color: var(--accent);
+  }
+
   .status-chip {
     display: inline-flex;
     align-items: center;
@@ -319,6 +345,53 @@
     gap: 12px;
   }
 
+  .overview-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .overview-card {
+    padding: 14px;
+    border-radius: 14px;
+    background: rgba(8, 13, 19, 0.76);
+    border: 1px solid rgba(42, 54, 70, 0.88);
+  }
+
+  .overview-label {
+    color: var(--text-dim);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .overview-title {
+    margin-top: 9px;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .overview-body {
+    margin-top: 8px;
+    color: var(--text-dim);
+    font-size: 12px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+  }
+
+  .workflow-list {
+    margin-top: 8px;
+    padding-left: 18px;
+    color: var(--text-dim);
+    font-size: 12px;
+    line-height: 1.7;
+  }
+
+  .workflow-list li + li {
+    margin-top: 4px;
+  }
+
   .stat-card {
     padding: 14px;
     border-radius: 14px;
@@ -498,6 +571,14 @@
     color: var(--text-dim);
     font-size: 11px;
     line-height: 1.5;
+  }
+
+  .section-kicker {
+    margin: 2px 0 10px;
+    color: var(--text-dim);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
   }
 
   .chip-row {
@@ -973,6 +1054,7 @@
     }
 
     .summary-stats,
+    .overview-grid,
     .output-grid {
       grid-template-columns: 1fr 1fr;
     }
@@ -990,6 +1072,7 @@
     }
 
     .summary-stats,
+    .overview-grid,
     .output-grid {
       grid-template-columns: 1fr;
     }
@@ -1022,11 +1105,15 @@
       <img src="/brand/crewmux-icon.svg" alt="CrewMux logo">
     </div>
     <div>
-      <h1><span>Crew</span>Mux Console</h1>
-      <p>Dispatch in the browser, reconcile in tmux, work deeply in iTerm.</p>
+      <h1 id="appTitle"><span>Crew</span>Mux Console</h1>
+      <p id="appSubtitle">Dispatch in the browser, reconcile in tmux, work deeply in iTerm.</p>
     </div>
   </div>
   <div class="top-right">
+    <div class="lang-switch">
+      <button class="lang-btn" id="langKoBtn" type="button" onclick="setLanguage('ko')">KO</button>
+      <button class="lang-btn" id="langEnBtn" type="button" onclick="setLanguage('en')">EN</button>
+    </div>
     <div class="status-chip">
       <span class="status-dot off" id="statusDot"></span>
       <span id="statusText">connecting...</span>
@@ -1044,7 +1131,7 @@
       <div class="panel-body">
         <div class="summary-main">
           <div>
-            <div class="eyebrow">Current Session</div>
+            <div class="eyebrow" id="summaryEyebrow">Current Session</div>
             <div class="summary-title" id="summaryTitle">No session selected</div>
             <div class="summary-path" id="summaryProject">Select a session to start.</div>
             <div class="summary-hint" id="summaryHint">
@@ -1052,31 +1139,46 @@
             </div>
           </div>
           <div class="summary-actions">
-            <button class="btn btn-ghost" onclick="openTerminal('master')">Open Master iTerm</button>
-            <button class="btn btn-ghost" onclick="openTerminal()">Open Selected iTerm</button>
-            <button class="btn btn-ghost" onclick="refreshCurrentView()">Refresh Now</button>
+            <button class="btn btn-ghost" id="summaryOpenMasterBtn" onclick="openTerminal('master')">Open Master iTerm</button>
+            <button class="btn btn-ghost" id="summaryOpenSelectedBtn" onclick="openTerminal()">Open Selected iTerm</button>
+            <button class="btn btn-ghost" id="summaryRefreshBtn" onclick="refreshCurrentView()">Refresh Now</button>
           </div>
         </div>
         <div class="summary-stats">
           <div class="stat-card">
-            <div class="stat-label">Master</div>
+            <div class="stat-label" id="statMasterLabel">Master</div>
             <div class="stat-value" id="statMaster">-</div>
             <div class="stat-caption" id="statMasterCaption">Provider and model</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Workers</div>
+            <div class="stat-label" id="statWorkersLabel">Workers</div>
             <div class="stat-value" id="statWorkers">0</div>
             <div class="stat-caption" id="statWorkersCaption">Idle team</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Last Task</div>
+            <div class="stat-label" id="statLastTaskLabel">Last Task</div>
             <div class="stat-value" id="statLastTask">No task yet</div>
             <div class="stat-caption" id="statLastTaskCaption">Dispatch history</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Started</div>
+            <div class="stat-label" id="statStartedLabel">Started</div>
             <div class="stat-value" id="statStarted">-</div>
             <div class="stat-caption" id="statStartedCaption">Session time</div>
+          </div>
+        </div>
+        <div class="overview-grid">
+          <div class="overview-card">
+            <div class="overview-label" id="overviewTargetLabel">Selected Target</div>
+            <div class="overview-title" id="overviewTargetTitle">Pick a session</div>
+            <div class="overview-body" id="overviewTargetBody">Choose a session, then pick master or a worker to focus the next instruction.</div>
+          </div>
+          <div class="overview-card">
+            <div class="overview-label" id="overviewBestForLabel">Best Use</div>
+            <div class="overview-body" id="overviewBestForBody">Use the dashboard for short dispatches, follow-ups, and progress checks. Use iTerm for direct terminal control.</div>
+          </div>
+          <div class="overview-card">
+            <div class="overview-label" id="overviewFlowLabel">Recommended Flow</div>
+            <ol class="workflow-list" id="overviewFlowList"></ol>
           </div>
         </div>
       </div>
@@ -1087,13 +1189,13 @@
         <div class="panel">
           <div class="panel-header">
             <div>
-              <h2>Agents</h2>
-              <div class="panel-subtitle">Select who you want to talk to.</div>
+              <h2 id="agentsTitle">Agents</h2>
+              <div class="panel-subtitle" id="agentsSubtitle">Select who you want to talk to.</div>
             </div>
             <span id="agentCount" style="font-size:11px;color:var(--text-dim)"></span>
           </div>
           <div class="panel-body">
-            <div class="helper-box">
+            <div class="helper-box" id="agentsHelper">
               Master is best for coordination. Workers are better for direct implementation or focused follow-ups.
             </div>
             <div id="agentList"></div>
@@ -1103,12 +1205,12 @@
         <div class="panel">
           <div class="panel-header">
             <div>
-              <h2>Spawn Worker</h2>
-              <div class="panel-subtitle">Create a worker and optionally dispatch a task immediately.</div>
+              <h2 id="spawnTitle">Spawn Worker</h2>
+              <div class="panel-subtitle" id="spawnSubtitle">Create a worker and optionally dispatch a task immediately.</div>
             </div>
           </div>
           <div class="panel-body">
-            <label class="form-label" for="spawnType">Provider / Model</label>
+            <label class="form-label" for="spawnType" id="spawnProviderLabel">Provider / Model</label>
             <div class="form-row">
               <select id="spawnType">
                 <option value="claude">Claude</option>
@@ -1118,7 +1220,7 @@
             </div>
             <div class="field-hint" id="spawnModelHint"></div>
 
-            <label class="form-label" for="spawnCount">Count</label>
+            <label class="form-label" for="spawnCount" id="spawnCountLabel">Count</label>
             <div class="form-row">
               <select id="spawnCount">
                 <option value="1">1 worker</option>
@@ -1129,32 +1231,29 @@
               </select>
             </div>
 
-            <label class="form-label" for="spawnTask">Task</label>
+            <label class="form-label" for="spawnTask" id="spawnTaskLabel">Task</label>
             <div class="form-row">
               <textarea id="spawnTask" placeholder="Describe the role or task to dispatch. Shift+Enter for a new line."></textarea>
             </div>
-            <div class="chip-row" style="margin-bottom:12px">
-              <button class="chip" onclick="fillSpawnTask('You are the frontend worker. Handle UI, component, styling, and browser behavior tasks. Start by greeting in Korean and state your role.')">Frontend intro</button>
-              <button class="chip" onclick="fillSpawnTask('You are the backend worker. Handle API, database, infra, and server-side implementation tasks. Start by greeting in Korean and state your role.')">Backend intro</button>
-              <button class="chip" onclick="fillSpawnTask('Review the current repo status, summarize blockers, and report the next concrete action in Korean.')">Status reviewer</button>
-            </div>
-            <button class="btn btn-primary" style="width:100%" onclick="spawnWorker()">Spawn &amp; Dispatch</button>
+            <div class="section-kicker" id="spawnTemplateLabel">Role Templates</div>
+            <div class="chip-row" id="spawnTemplateRow" style="margin-bottom:12px"></div>
+            <button class="btn btn-primary" id="spawnActionBtn" style="width:100%" onclick="spawnWorker()">Spawn &amp; Dispatch</button>
           </div>
         </div>
 
         <div class="panel">
           <div class="panel-header">
             <div>
-              <h2>Actions</h2>
-              <div class="panel-subtitle">High-impact controls for the current session.</div>
+              <h2 id="actionsTitle">Actions</h2>
+              <div class="panel-subtitle" id="actionsSubtitle">High-impact controls for the current session.</div>
             </div>
           </div>
           <div class="panel-body quick-actions">
-            <button class="btn btn-ghost btn-sm" onclick="openTerminal()">Open Selected iTerm</button>
-            <button class="btn btn-ghost btn-sm" onclick="openTerminal('master')">Open Master iTerm</button>
-            <button class="btn btn-warn btn-sm" onclick="interruptAll()">Interrupt All</button>
-            <button class="btn btn-danger btn-sm" onclick="killWorkers()">Kill Workers</button>
-            <button class="btn btn-danger btn-sm" onclick="stopSession()">Stop Session</button>
+            <button class="btn btn-ghost btn-sm" id="actionsOpenSelectedBtn" onclick="openTerminal()">Open Selected iTerm</button>
+            <button class="btn btn-ghost btn-sm" id="actionsOpenMasterBtn" onclick="openTerminal('master')">Open Master iTerm</button>
+            <button class="btn btn-warn btn-sm" id="interruptAllBtn" onclick="interruptAll()">Interrupt All</button>
+            <button class="btn btn-danger btn-sm" id="killWorkersBtn" onclick="killWorkers()">Kill Workers</button>
+            <button class="btn btn-danger btn-sm" id="stopSessionBtn" onclick="stopSession()">Stop Session</button>
           </div>
         </div>
       </div>
@@ -1163,12 +1262,12 @@
         <div class="panel conversation-panel">
           <div class="panel-header">
             <div>
-              <h2>Conversation</h2>
+              <h2 id="conversationTitle">Conversation</h2>
               <div class="panel-subtitle" id="conversationHint">Select a target and send a message.</div>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn btn-ghost btn-sm" onclick="openTerminal()">Open iTerm</button>
-              <button class="btn btn-ghost btn-sm" onclick="peekAgent()">Refresh Snapshot</button>
+              <button class="btn btn-ghost btn-sm" id="conversationOpenTerminalBtn" onclick="openTerminal()">Open iTerm</button>
+              <button class="btn btn-ghost btn-sm" id="conversationRefreshBtn" onclick="peekAgent()">Refresh Snapshot</button>
               <button class="btn btn-ghost btn-sm" id="autoRefreshBtn" onclick="toggleAutoRefresh()">Auto: OFF</button>
             </div>
           </div>
@@ -1182,12 +1281,12 @@
                   <div class="composer-title" id="composerTitle">Send to master</div>
                   <div class="composer-target" id="composerTarget">Choose an agent and type a concise instruction.</div>
                 </div>
-                <button class="btn btn-ghost btn-sm" onclick="clearDraft()">Clear</button>
+                <button class="btn btn-ghost btn-sm" id="clearDraftBtn" onclick="clearDraft()">Clear</button>
               </div>
               <textarea id="sendMessage" placeholder="Type your instruction here. Enter sends. Shift+Enter inserts a new line."></textarea>
               <div class="composer-actions">
                 <div class="composer-help" id="composerHelp">Enter to send, Shift+Enter for newline, detailed terminal work in iTerm.</div>
-                <button class="btn btn-primary" onclick="sendMessage()">Send Message</button>
+                <button class="btn btn-primary" id="sendMessageBtn" onclick="sendMessage()">Send Message</button>
               </div>
             </div>
           </div>
@@ -1197,10 +1296,10 @@
           <div class="panel">
             <div class="panel-header">
               <div>
-                <h2>Live Snapshot</h2>
-                <div class="panel-subtitle">Raw pane capture for the selected target.</div>
+                <h2 id="snapshotTitle">Live Snapshot</h2>
+                <div class="panel-subtitle" id="snapshotSubtitle">Raw pane capture for the selected target.</div>
               </div>
-              <button class="btn btn-ghost btn-sm" onclick="peekAgent()">Refresh</button>
+              <button class="btn btn-ghost btn-sm" id="snapshotRefreshBtn" onclick="peekAgent()">Refresh</button>
             </div>
             <div class="panel-body">
               <div class="terminal" id="terminal">Select an agent to view a live snapshot.</div>
@@ -1210,10 +1309,10 @@
           <div class="panel">
             <div class="panel-header">
               <div>
-                <h2>Activity Feed</h2>
-                <div class="panel-subtitle">Recent session events parsed from the task log.</div>
+                <h2 id="activityTitle">Activity Feed</h2>
+                <div class="panel-subtitle" id="activitySubtitle">Recent session events parsed from the task log.</div>
               </div>
-              <button class="btn btn-ghost btn-sm" onclick="refreshLog()">Refresh</button>
+              <button class="btn btn-ghost btn-sm" id="activityRefreshBtn" onclick="refreshLog()">Refresh</button>
             </div>
             <div class="panel-body">
               <div class="activity-list" id="activityFeed"></div>
@@ -1226,19 +1325,19 @@
 
   <div id="welcomeContent">
     <div class="welcome">
-      <h2>Start with a Session</h2>
-      <p>
+      <h2 id="welcomeTitle">Start with a Session</h2>
+      <p id="welcomeBody">
         Create a project session, pick your master model, then use the web UI for dispatch and iTerm for full terminal control.
         This screen is optimized for quick instructions, status checks, and worker orchestration.
       </p>
-      <button class="btn btn-primary" onclick="showCreateModal()" style="font-size:14px;padding:11px 24px">+ New Session</button>
+      <button class="btn btn-primary" id="welcomeCreateBtn" onclick="showCreateModal()" style="font-size:14px;padding:11px 24px">+ New Session</button>
     </div>
   </div>
 </div>
 
 <div class="modal-overlay" id="createModal">
   <div class="modal">
-    <h2>Create New Session</h2>
+    <h2 id="createModalTitle">Create New Session</h2>
     <div class="form-row" style="margin-bottom:8px">
       <select id="createMasterType">
         <option value="claude">Claude Master</option>
@@ -1248,7 +1347,7 @@
     </div>
     <div class="field-hint" id="createMasterModelHint" style="margin-bottom:12px"></div>
     <div class="recents" id="recentsSection" style="display:none">
-      <div class="recents-label">Recent projects</div>
+      <div class="recents-label" id="recentsLabel">Recent projects</div>
       <div id="recentsList"></div>
     </div>
     <input id="newProjectDir" placeholder="Path or browse below...">
@@ -1257,7 +1356,7 @@
       <div id="dirList"></div>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="hideCreateModal()">Cancel</button>
+      <button class="btn btn-ghost" id="createModalCancelBtn" onclick="hideCreateModal()">Cancel</button>
       <button class="btn btn-primary" id="createBtn" onclick="createSession()">Select This Folder</button>
     </div>
   </div>
@@ -1273,14 +1372,291 @@ var latestStatus = null;
 var latestPeekText = '';
 var latestLogText = '';
 var CHAT_STORE_KEY = 'crewmux-chat-history-v1';
+var LANG_STORE_KEY = 'crewmux-ui-lang-v1';
 var sendInFlight = false;
 var spawnInFlight = false;
+var currentLang = resolveInitialLanguage();
+
+var I18N = {
+  en: {
+    app_subtitle: 'Dispatch in the browser, reconcile in tmux, work deeply in iTerm.',
+    connecting: 'connecting...',
+    disconnected: 'disconnected',
+    sessions_count: '{count} session(s)',
+    current_session: 'Current Session',
+    no_session_selected: 'No session selected',
+    select_session_prompt: 'Select a session to start.',
+    summary_hint_default: 'Use the browser for short instructions and status checks. Open iTerm when you need full terminal control.',
+    summary_hint_active: 'Current target: {target}. Dispatch here, inspect raw output below, and jump into iTerm for terminal-native work.',
+    open_master_iterm: 'Open Master iTerm',
+    open_selected_iterm: 'Open Selected iTerm',
+    refresh_now: 'Refresh Now',
+    master_label: 'Master',
+    workers_label: 'Workers',
+    last_task_label: 'Last Task',
+    started_label: 'Started',
+    provider_and_model: 'Provider and model',
+    idle_team: 'Idle team',
+    no_task_yet: 'No task yet',
+    dispatch_history: 'Dispatch history',
+    session_time: 'Session time',
+    selected_target: 'Selected Target',
+    best_use: 'Best Use',
+    recommended_flow: 'Recommended Flow',
+    pick_session_title: 'Pick a session',
+    pick_session_body: 'Choose a session, then pick master or a worker to focus the next instruction.',
+    best_use_body: 'Use the dashboard for dispatch, follow-ups, and progress checks. Use iTerm for direct terminal control or long interactive tasks.',
+    flow_step_1: 'Choose a session and the target agent.',
+    flow_step_2: 'Send a short instruction or spawn a worker.',
+    flow_step_3: 'Open iTerm when you need terminal-native work.',
+    target_master_body: 'You are addressing the coordinator. Best for delegation, summaries, and conflict resolution.\nProvider: {provider}{model}',
+    target_worker_body: 'You are addressing {name}. Best for focused implementation follow-ups and unblock requests.\nProvider: {provider}{model}',
+    agents_title: 'Agents',
+    agents_subtitle: 'Choose who should receive the next instruction.',
+    agents_helper: 'Use master for coordination and worker assignment. Message a worker directly for implementation follow-ups.',
+    agent_count: '{count} agents',
+    spawn_title: 'Spawn Worker',
+    spawn_subtitle: 'Create a worker, choose a role template, and optionally dispatch a task immediately.',
+    provider_model_label: 'Provider / Model',
+    count_label: 'Count',
+    task_label: 'Task',
+    spawn_placeholder: 'Describe the role or task to dispatch. Shift+Enter for a new line.',
+    role_templates: 'Role Templates',
+    spawn_button: 'Spawn & Dispatch',
+    actions_title: 'Session Actions',
+    actions_subtitle: 'Open terminals or intervene in the current session.',
+    interrupt_all: 'Interrupt All',
+    kill_workers: 'Kill Workers',
+    stop_session: 'Stop Session',
+    conversation_title: 'Message Desk',
+    conversation_default_hint: 'Select a target and send a short instruction.',
+    open_iterm: 'Open iTerm',
+    refresh_snapshot: 'Refresh Snapshot',
+    auto_off: 'Auto: OFF',
+    auto_on: 'Auto: ON',
+    send_to_master: 'Send to master',
+    send_to_target: 'Send to {target}',
+    choose_target_help: 'Choose an agent and type a concise instruction.',
+    target_meta: 'Target: {name} · {provider}{model}',
+    placeholder_master: 'Example: Summarize the current state and assign only the necessary workers.',
+    placeholder_worker: 'Example: Report current progress in one line and continue with the next step.',
+    conversation_hint_full: '{meta} · Open iTerm for full terminal interaction.',
+    clear: 'Clear',
+    composer_placeholder: 'Type your instruction here. Enter sends. Shift+Enter inserts a new line.',
+    composer_help_default: 'Enter to send, Shift+Enter for newline, use iTerm for detailed terminal work.',
+    send_message: 'Send Message',
+    live_snapshot: 'Live Snapshot',
+    live_snapshot_subtitle: 'Raw pane capture for the selected target.',
+    refresh: 'Refresh',
+    activity_feed: 'Activity Feed',
+    activity_feed_subtitle: 'Recent session events parsed from the task log.',
+    start_with_session: 'Start with a Session',
+    welcome_body: 'Create a project session, pick your master model, then use the web UI for dispatch and iTerm for deeper terminal work.',
+    new_session: '+ New Session',
+    create_new_session: 'Create New Session',
+    recent_projects: 'Recent projects',
+    path_placeholder: 'Path or browse below...',
+    cancel: 'Cancel',
+    select_this_folder: 'Select This Folder',
+    create_session_here_git: 'Create Session Here (git)',
+    worker_count: '{count} worker(s)',
+    active_workers: '{count} active worker(s)',
+    no_workers_running: 'No workers running',
+    task_count: 'Task count: {count}',
+    session_started: 'Session started',
+    master_agent: 'Master agent',
+    loading_snapshot: 'Loading live snapshot...',
+    select_agent_snapshot: 'Select an agent to view a live snapshot.',
+    select_session_chat: 'Select a session to start chatting with an agent.',
+    workflow: 'workflow',
+    latest_output: 'latest output',
+    you: 'you',
+    system: 'system',
+    no_messages_target: 'No messages yet for this target. Try a quick prompt below.',
+    dashboard_workflow_intro: 'Send short instructions here. Use Open iTerm when you want direct terminal control or long interactive work.',
+    no_activity: 'No activity yet.',
+    no_output_yet: '(No output yet)',
+    empty_terminal: '(empty)',
+    failed_load_agents: 'Failed to load agents.',
+    default_model: ' default model',
+    model_hint_claude: 'Anthropic Claude Code aliases. Default uses your account tier default model.',
+    model_hint_codex: 'OpenAI coding models for Codex CLI. Default uses the CLI default model.',
+    model_hint_default: 'Default model only.',
+    default_option: 'Default',
+    claude_master: 'Claude Master',
+    codex_master: 'Codex Master',
+    select_short: 'select',
+    path_required: 'Project path is required.',
+    browse_failed: 'Browse failed: {message}',
+    create_failed: 'Create failed: {message}',
+    session_created: "Session '{session}' created.",
+    stop_session_confirm: "Stop session '{session}'?",
+    session_stopped: 'Session stopped.',
+    failed_prefix: 'Failed: {message}',
+    terminal_opened: 'Opened {target} in iTerm.',
+    open_failed: 'Open failed: {message}',
+    sent_to_target_toast: 'Sent to {target}.',
+    send_failed: 'Send failed: {message}',
+    spawn_select_session_first: 'Select a session first.',
+    spawn_success: '{count} {provider} worker(s) ready.',
+    spawn_failed: 'Spawn failed: {message}',
+    interrupted_all_toast: 'Interrupted all agents.',
+    interrupted_target_toast: 'Interrupted {target}.',
+    killed_target_toast: 'Killed {target}.',
+    all_workers_killed_toast: 'All workers killed.',
+    kill_workers_confirm: 'Kill all workers?',
+    log_label: 'log',
+    interrupted_note_all: 'Interrupted all agents.',
+    interrupted_note_target: 'Interrupted {target}.',
+    killed_note_target: 'Killed {target}.',
+    killed_note_all: 'Killed all workers.',
+    interrupt_short: 'interrupt',
+    kill_short: 'kill',
+    worker_option: '{count} worker(s)'
+  },
+  ko: {
+    app_subtitle: '브라우저에서 지시하고, tmux에서 조율하고, iTerm에서 깊게 작업하세요.',
+    connecting: '연결 중...',
+    disconnected: '연결 끊김',
+    sessions_count: '{count}개 세션',
+    current_session: '현재 세션',
+    no_session_selected: '선택된 세션 없음',
+    select_session_prompt: '세션을 선택해 시작하세요.',
+    summary_hint_default: '브라우저는 짧은 지시와 상태 확인에 최적화되어 있습니다. 직접 터미널 제어가 필요하면 iTerm을 여세요.',
+    summary_hint_active: '현재 대상은 {target}입니다. 여기서 지시하고, 아래 raw output을 확인하고, 직접 터미널 작업은 iTerm에서 이어가세요.',
+    open_master_iterm: 'Master iTerm 열기',
+    open_selected_iterm: '선택한 대상 iTerm 열기',
+    refresh_now: '지금 새로고침',
+    master_label: '마스터',
+    workers_label: '워커',
+    last_task_label: '마지막 작업',
+    started_label: '시작 시각',
+    provider_and_model: 'Provider / 모델',
+    idle_team: '아직 워커 없음',
+    no_task_yet: '아직 작업 없음',
+    dispatch_history: '디스패치 이력',
+    session_time: '세션 시간',
+    selected_target: '선택된 대상',
+    best_use: '이 화면에 적합한 작업',
+    recommended_flow: '권장 흐름',
+    pick_session_title: '세션을 먼저 선택하세요',
+    pick_session_body: '세션을 고른 뒤 master 또는 worker 하나를 선택하면 다음 지시가 훨씬 명확해집니다.',
+    best_use_body: '이 대시보드는 지시 전달, 후속 요청, 상태 확인에 적합합니다. 직접 터미널 조작이나 긴 상호작용은 iTerm에서 진행하세요.',
+    flow_step_1: '세션과 대상 에이전트를 선택합니다.',
+    flow_step_2: '짧은 지시를 보내거나 워커를 생성합니다.',
+    flow_step_3: '직접 터미널 작업이 필요하면 iTerm을 엽니다.',
+    target_master_body: '현재 coordinator인 master에게 지시하는 상태입니다. 작업 분배, 요약, 충돌 조정에 가장 적합합니다.\nProvider: {provider}{model}',
+    target_worker_body: '현재 {name}에게 직접 지시하는 상태입니다. 구현 후속 지시나 막힘 해소 요청에 적합합니다.\nProvider: {provider}{model}',
+    agents_title: '에이전트',
+    agents_subtitle: '다음 지시를 받을 대상을 선택하세요.',
+    agents_helper: '조율과 작업 배정은 master가 가장 적합합니다. 구현 후속 작업은 worker에게 직접 보내는 편이 더 빠릅니다.',
+    agent_count: '{count}개 에이전트',
+    spawn_title: '워커 생성',
+    spawn_subtitle: '워커를 만들고, 역할 템플릿을 고른 뒤 필요하면 바로 작업까지 전달하세요.',
+    provider_model_label: 'Provider / 모델',
+    count_label: '수량',
+    task_label: '작업',
+    spawn_placeholder: '보낼 역할이나 작업을 적어주세요. Shift+Enter로 줄바꿈합니다.',
+    role_templates: '역할 템플릿',
+    spawn_button: '워커 생성 후 작업 전달',
+    actions_title: '세션 액션',
+    actions_subtitle: '현재 세션에서 자주 쓰는 조작입니다.',
+    interrupt_all: '전체 인터럽트',
+    kill_workers: '워커 종료',
+    stop_session: '세션 종료',
+    conversation_title: '메시지 데스크',
+    conversation_default_hint: '대상을 선택하고 짧은 지시를 보내세요.',
+    open_iterm: 'iTerm 열기',
+    refresh_snapshot: '스냅샷 새로고침',
+    auto_off: '자동 새로고침: 끔',
+    auto_on: '자동 새로고침: 켬',
+    send_to_master: 'master에게 보내기',
+    send_to_target: '{target}에게 보내기',
+    choose_target_help: '에이전트를 고른 뒤 짧고 명확한 지시를 입력하세요.',
+    target_meta: '대상: {name} · {provider}{model}',
+    placeholder_master: '예: 현재 상태를 정리하고 필요한 worker만 배정해줘.',
+    placeholder_worker: '예: 현재 진행 상황 한 줄로 보고하고 바로 다음 단계 진행해줘.',
+    conversation_hint_full: '{meta} · 긴 상호작용이나 직접 조작은 iTerm에서 진행하세요.',
+    clear: '지우기',
+    composer_placeholder: '지시를 입력하세요. Enter 전송, Shift+Enter 줄바꿈.',
+    composer_help_default: 'Enter로 전송하고, Shift+Enter로 줄바꿈합니다. 자세한 터미널 작업은 iTerm에서 진행하세요.',
+    send_message: '메시지 보내기',
+    live_snapshot: '실시간 스냅샷',
+    live_snapshot_subtitle: '선택한 대상의 raw pane 출력을 바로 봅니다.',
+    refresh: '새로고침',
+    activity_feed: '활동 피드',
+    activity_feed_subtitle: 'task log에서 최근 이벤트만 읽기 쉽게 정리합니다.',
+    start_with_session: '세션부터 시작하세요',
+    welcome_body: '프로젝트 세션을 만들고 master 모델을 고른 뒤, 웹에서는 지시와 상태 확인을 하고 깊은 터미널 작업은 iTerm에서 진행하세요.',
+    new_session: '+ 새 세션',
+    create_new_session: '새 세션 만들기',
+    recent_projects: '최근 프로젝트',
+    path_placeholder: '경로를 입력하거나 아래에서 선택하세요...',
+    cancel: '취소',
+    select_this_folder: '이 폴더 선택',
+    create_session_here_git: '여기서 세션 만들기 (git)',
+    worker_count: '{count}개 워커',
+    active_workers: '{count}개 워커 실행 중',
+    no_workers_running: '실행 중인 워커 없음',
+    task_count: '누적 작업 수: {count}',
+    session_started: '세션 시작 시각',
+    master_agent: '마스터 에이전트',
+    loading_snapshot: '실시간 스냅샷 불러오는 중...',
+    select_agent_snapshot: '에이전트를 선택하면 실시간 스냅샷이 표시됩니다.',
+    select_session_chat: '세션을 선택하면 에이전트와 바로 대화할 수 있습니다.',
+    workflow: '워크플로우',
+    latest_output: '최신 출력',
+    you: '나',
+    system: '시스템',
+    no_messages_target: '이 대상에 대한 메시지가 아직 없습니다. 아래 빠른 프롬프트부터 시작해보세요.',
+    dashboard_workflow_intro: '이곳에서는 짧은 지시를 보내세요. 직접 조작이나 긴 상호작용은 Open iTerm을 사용하세요.',
+    no_activity: '아직 활동 기록이 없습니다.',
+    no_output_yet: '(아직 출력 없음)',
+    empty_terminal: '(비어 있음)',
+    failed_load_agents: '에이전트 목록을 불러오지 못했습니다.',
+    default_model: ' 기본 모델',
+    model_hint_claude: 'Anthropic Claude Code alias 목록입니다. 기본값은 계정 tier 기본 모델을 사용합니다.',
+    model_hint_codex: 'OpenAI Codex CLI용 coding model 목록입니다. 기본값은 CLI 기본 모델을 사용합니다.',
+    model_hint_default: '기본 모델만 사용합니다.',
+    default_option: '기본값',
+    claude_master: 'Claude Master',
+    codex_master: 'Codex Master',
+    select_short: '선택',
+    path_required: '프로젝트 경로가 필요합니다.',
+    browse_failed: '브라우즈 실패: {message}',
+    create_failed: '생성 실패: {message}',
+    session_created: "세션 '{session}'을 만들었습니다.",
+    stop_session_confirm: "세션 '{session}'을 종료할까요?",
+    session_stopped: '세션을 종료했습니다.',
+    failed_prefix: '실패: {message}',
+    terminal_opened: '{target}을 iTerm으로 열었습니다.',
+    open_failed: '열기 실패: {message}',
+    sent_to_target_toast: '{target}에게 전송했습니다.',
+    send_failed: '전송 실패: {message}',
+    spawn_select_session_first: '먼저 세션을 선택하세요.',
+    spawn_success: '{provider} 워커 {count}개를 준비했습니다.',
+    spawn_failed: '워커 생성 실패: {message}',
+    interrupted_all_toast: '모든 에이전트에 인터럽트를 보냈습니다.',
+    interrupted_target_toast: '{target}에 인터럽트를 보냈습니다.',
+    killed_target_toast: '{target}을 종료했습니다.',
+    all_workers_killed_toast: '모든 워커를 종료했습니다.',
+    kill_workers_confirm: '모든 워커를 종료할까요?',
+    log_label: '로그',
+    interrupted_note_all: '모든 에이전트에 인터럽트를 보냈습니다.',
+    interrupted_note_target: '{target}에 인터럽트를 보냈습니다.',
+    killed_note_target: '{target}을 종료했습니다.',
+    killed_note_all: '모든 워커를 종료했습니다.',
+    interrupt_short: '인터럽트',
+    kill_short: '종료',
+    worker_option: '{count}개 워커'
+  }
+};
 
 var MODEL_PRESETS = {
   claude: {
-    hint: 'Anthropic Claude Code aliases. Default uses your account tier default model.',
+    hintKey: 'model_hint_claude',
     options: [
-      { value: '', label: 'Default' },
+      { value: '', labelKey: 'default_option' },
       { value: 'sonnet', label: 'sonnet' },
       { value: 'opus', label: 'opus' },
       { value: 'haiku', label: 'haiku' },
@@ -1289,9 +1665,9 @@ var MODEL_PRESETS = {
     ]
   },
   codex: {
-    hint: 'OpenAI coding models for Codex CLI. Default uses the CLI default model.',
+    hintKey: 'model_hint_codex',
     options: [
-      { value: '', label: 'Default' },
+      { value: '', labelKey: 'default_option' },
       { value: 'gpt-5.4', label: 'gpt-5.4' },
       { value: 'gpt-5.3-codex', label: 'gpt-5.3-codex' },
       { value: 'gpt-5.2-codex', label: 'gpt-5.2-codex' },
@@ -1304,27 +1680,102 @@ var MODEL_PRESETS = {
 };
 
 var QUICK_PROMPTS = {
-  master: [
-    '현재 상태를 짧게 요약하고 다음 작업만 정해줘.',
-    '지금 필요한 worker만 골라서 역할을 배정해줘.',
-    '진행 중인 작업에서 막힌 점이 있으면 바로 보고해줘.'
+  en: {
+    master: [
+      'Summarize the current status briefly and decide only the next action.',
+      'Choose only the workers you actually need and assign concrete roles.',
+      'If anything is blocked, report the blocker immediately.'
+    ],
+    claudeWorker: [
+      'Report current progress and remaining work in three lines or fewer.',
+      'Review the riskiest area first and call out concrete concerns.',
+      'If nothing blocks you, continue into the next subtask on your own.'
+    ],
+    codexWorker: [
+      'Continue implementation now and report only the concrete changes when finished.',
+      'If you are not blocked, run tests before reporting back.',
+      'Do not guess. Continue only from verified information.'
+    ],
+    genericWorker: [
+      'Report current status in one line and move to the next step.',
+      'If you need more information, ask for it directly and concretely.',
+      'When done, summarize changed files and results only.'
+    ]
+  },
+  ko: {
+    master: [
+      '현재 상태를 짧게 요약하고 다음 작업만 정해줘.',
+      '지금 필요한 worker만 골라서 역할을 배정해줘.',
+      '진행 중인 작업에서 막힌 점이 있으면 바로 보고해줘.'
+    ],
+    claudeWorker: [
+      '현재 진행 상황과 남은 작업을 3줄 이내로 보고해줘.',
+      '리뷰 관점에서 가장 위험한 부분부터 점검해줘.',
+      '필요하면 스스로 다음 세부 작업까지 이어서 진행해줘.'
+    ],
+    codexWorker: [
+      '지금 바로 구현을 이어가고 끝나면 변경점만 짧게 보고해줘.',
+      '막히는 부분이 없으면 테스트까지 진행해줘.',
+      '작업 중 추정하지 말고 확인한 내용만 기준으로 진행해줘.'
+    ],
+    genericWorker: [
+      '현재 상태를 한 줄로 보고하고 다음 단계로 넘어가줘.',
+      '필요한 정보가 부족하면 바로 구체적으로 알려줘.',
+      '완료되면 변경 파일과 결과만 간단히 정리해줘.'
+    ]
+  }
+};
+
+var SPAWN_TEMPLATES = {
+  en: [
+    {
+      label: 'Frontend kickoff',
+      text: 'You are the frontend worker. Handle UI, component, styling, and browser behavior tasks. Start by introducing yourself briefly in English and state your role.'
+    },
+    {
+      label: 'Backend kickoff',
+      text: 'You are the backend worker. Handle API, database, infra, and server-side implementation tasks. Start by introducing yourself briefly in English and state your role.'
+    },
+    {
+      label: 'Status reviewer',
+      text: 'Review the current repo status, summarize blockers, and report the next concrete action in English.'
+    }
   ],
-  claudeWorker: [
-    '현재 진행 상황과 남은 작업을 3줄 이내로 보고해줘.',
-    '리뷰 관점에서 가장 위험한 부분부터 점검해줘.',
-    '필요하면 스스로 다음 세부 작업까지 이어서 진행해줘.'
-  ],
-  codexWorker: [
-    '지금 바로 구현을 이어가고 끝나면 변경점만 짧게 보고해줘.',
-    '막히는 부분이 없으면 테스트까지 진행해줘.',
-    '작업 중 추정하지 말고 확인한 내용만 기준으로 진행해줘.'
-  ],
-  genericWorker: [
-    '현재 상태를 한 줄로 보고하고 다음 단계로 넘어가줘.',
-    '필요한 정보가 부족하면 바로 구체적으로 알려줘.',
-    '완료되면 변경 파일과 결과만 간단히 정리해줘.'
+  ko: [
+    {
+      label: '프론트엔드 시작',
+      text: 'You are the frontend worker. Handle UI, component, styling, and browser behavior tasks. Start by greeting in Korean and state your role.'
+    },
+    {
+      label: '백엔드 시작',
+      text: 'You are the backend worker. Handle API, database, infra, and server-side implementation tasks. Start by greeting in Korean and state your role.'
+    },
+    {
+      label: '상태 리뷰어',
+      text: 'Review the current repo status, summarize blockers, and report the next concrete action in Korean.'
+    }
   ]
 };
+
+function resolveInitialLanguage() {
+  try {
+    var saved = localStorage.getItem(LANG_STORE_KEY);
+    if (saved === 'ko' || saved === 'en') return saved;
+  } catch (error) {
+    /* ignore */
+  }
+  return navigator.language && navigator.language.toLowerCase().indexOf('ko') === 0 ? 'ko' : 'en';
+}
+
+function t(key, vars) {
+  var dict = I18N[currentLang] || I18N.en;
+  var fallback = I18N.en[key] || key;
+  var template = dict[key] || fallback;
+  if (!vars) return template;
+  return template.replace(/\{(\w+)\}/g, function(_, name) {
+    return vars[name] == null ? '' : String(vars[name]);
+  });
+}
 
 function escapeHtml(value) {
   return value
@@ -1364,11 +1815,180 @@ function toast(message, type) {
   setTimeout(function() { el.className = 'toast'; }, 2500);
 }
 
+function localeTag() {
+  return currentLang === 'ko' ? 'ko-KR' : 'en-US';
+}
+
+function setText(id, key, vars) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = t(key, vars);
+}
+
+function updateLanguageButtons() {
+  document.getElementById('langKoBtn').classList.toggle('active', currentLang === 'ko');
+  document.getElementById('langEnBtn').classList.toggle('active', currentLang === 'en');
+}
+
+function providerLabel(agentType) {
+  if (agentType === 'claude') return 'Claude';
+  if (agentType === 'codex') return 'Codex';
+  return agentType || '-';
+}
+
+function providerModelSuffix(model, includeDefault) {
+  if (model) return ' / ' + model;
+  return includeDefault ? t('default_model') : '';
+}
+
+function describeAgent(agent, includeDefault) {
+  if (!agent) return '-';
+  return providerLabel(agent.agent_type) + providerModelSuffix(agent.model, includeDefault);
+}
+
+function renderOverview() {
+  var flowList = document.getElementById('overviewFlowList');
+  flowList.replaceChildren();
+  ['flow_step_1', 'flow_step_2', 'flow_step_3'].forEach(function(key) {
+    var item = document.createElement('li');
+    item.textContent = t(key);
+    flowList.appendChild(item);
+  });
+
+  if (!latestStatus) {
+    setText('overviewTargetTitle', 'pick_session_title');
+    setText('overviewTargetBody', 'pick_session_body');
+    setText('overviewBestForBody', 'best_use_body');
+    return;
+  }
+
+  var agent = getSelectedAgent() || latestStatus.master;
+  var title = currentTarget === 'master' ? t('master_agent') : agent.name;
+  var bodyKey = currentTarget === 'master' ? 'target_master_body' : 'target_worker_body';
+  document.getElementById('overviewTargetTitle').textContent = title;
+  document.getElementById('overviewTargetBody').textContent = t(bodyKey, {
+    name: agent.name,
+    provider: providerLabel(agent.agent_type),
+    model: providerModelSuffix(agent.model, true)
+  });
+  setText('overviewBestForBody', 'best_use_body');
+}
+
+function renderSpawnTemplates() {
+  var row = document.getElementById('spawnTemplateRow');
+  row.replaceChildren();
+
+  (SPAWN_TEMPLATES[currentLang] || SPAWN_TEMPLATES.en).forEach(function(template) {
+    var button = document.createElement('button');
+    button.className = 'chip';
+    button.type = 'button';
+    button.textContent = template.label;
+    button.addEventListener('click', function() {
+      fillSpawnTask(template.text);
+    });
+    row.appendChild(button);
+  });
+}
+
+function applyTranslations() {
+  document.documentElement.lang = currentLang === 'ko' ? 'ko' : 'en';
+  document.title = 'CrewMux Console';
+
+  setText('appSubtitle', 'app_subtitle');
+  setText('summaryEyebrow', 'current_session');
+  setText('summaryOpenMasterBtn', 'open_master_iterm');
+  setText('summaryOpenSelectedBtn', 'open_selected_iterm');
+  setText('summaryRefreshBtn', 'refresh_now');
+  setText('statMasterLabel', 'master_label');
+  setText('statWorkersLabel', 'workers_label');
+  setText('statLastTaskLabel', 'last_task_label');
+  setText('statStartedLabel', 'started_label');
+  setText('overviewTargetLabel', 'selected_target');
+  setText('overviewBestForLabel', 'best_use');
+  setText('overviewFlowLabel', 'recommended_flow');
+
+  setText('agentsTitle', 'agents_title');
+  setText('agentsSubtitle', 'agents_subtitle');
+  setText('agentsHelper', 'agents_helper');
+  setText('spawnTitle', 'spawn_title');
+  setText('spawnSubtitle', 'spawn_subtitle');
+  setText('spawnProviderLabel', 'provider_model_label');
+  setText('spawnCountLabel', 'count_label');
+  setText('spawnTaskLabel', 'task_label');
+  setText('spawnTemplateLabel', 'role_templates');
+  setText('spawnActionBtn', 'spawn_button');
+  setText('actionsTitle', 'actions_title');
+  setText('actionsSubtitle', 'actions_subtitle');
+  setText('actionsOpenSelectedBtn', 'open_selected_iterm');
+  setText('actionsOpenMasterBtn', 'open_master_iterm');
+  setText('interruptAllBtn', 'interrupt_all');
+  setText('killWorkersBtn', 'kill_workers');
+  setText('stopSessionBtn', 'stop_session');
+  setText('conversationTitle', 'conversation_title');
+  setText('conversationOpenTerminalBtn', 'open_iterm');
+  setText('conversationRefreshBtn', 'refresh_snapshot');
+  setText('clearDraftBtn', 'clear');
+  setText('sendMessageBtn', 'send_message');
+  setText('snapshotTitle', 'live_snapshot');
+  setText('snapshotSubtitle', 'live_snapshot_subtitle');
+  setText('snapshotRefreshBtn', 'refresh');
+  setText('activityTitle', 'activity_feed');
+  setText('activitySubtitle', 'activity_feed_subtitle');
+  setText('activityRefreshBtn', 'refresh');
+  setText('welcomeTitle', 'start_with_session');
+  setText('welcomeBody', 'welcome_body');
+  setText('welcomeCreateBtn', 'new_session');
+  setText('createModalTitle', 'create_new_session');
+  setText('recentsLabel', 'recent_projects');
+  setText('createModalCancelBtn', 'cancel');
+
+  document.getElementById('sendMessage').placeholder = t('composer_placeholder');
+  document.getElementById('spawnTask').placeholder = t('spawn_placeholder');
+  document.getElementById('newProjectDir').placeholder = t('path_placeholder');
+
+  var spawnType = document.getElementById('spawnType');
+  spawnType.options[0].textContent = 'Claude';
+  spawnType.options[1].textContent = 'Codex';
+
+  var createMasterType = document.getElementById('createMasterType');
+  createMasterType.options[0].textContent = t('claude_master');
+  createMasterType.options[1].textContent = t('codex_master');
+
+  Array.prototype.forEach.call(document.getElementById('spawnCount').options, function(option) {
+    option.textContent = t('worker_option', { count: option.value });
+  });
+
+  var initialCard = document.querySelector('#sessionsRow .new-session-card');
+  if (initialCard) initialCard.textContent = t('new_session');
+
+  updateLanguageButtons();
+  syncSpawnModelOptions();
+  syncCreateMasterModelOptions();
+  renderSpawnTemplates();
+  renderOverview();
+  setComposerState();
+  renderPromptChips();
+  renderChatThread();
+  renderActivityFeed();
+  updateAutoRefreshButton();
+}
+
+function setLanguage(lang) {
+  if (lang !== 'ko' && lang !== 'en') return;
+  currentLang = lang;
+  try {
+    localStorage.setItem(LANG_STORE_KEY, lang);
+  } catch (error) {
+    /* ignore */
+  }
+  applyTranslations();
+  refreshSessions();
+}
+
 function formatLocalTime(value) {
   if (!value) return '-';
   var date = new Date(value);
   if (String(date) === 'Invalid Date') return value;
-  return date.toLocaleString([], {
+  return date.toLocaleString(localeTag(), {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
@@ -1380,14 +2000,14 @@ function syncModelOptions(typeId, modelId, hintId) {
   var type = document.getElementById(typeId).value;
   var modelEl = document.getElementById(modelId);
   var hintEl = document.getElementById(hintId);
-  var config = MODEL_PRESETS[type] || { hint: 'Default model only', options: [{ value: '', label: 'Default' }] };
+  var config = MODEL_PRESETS[type] || { hintKey: 'model_hint_default', options: [{ value: '', labelKey: 'default_option' }] };
   var previousValue = modelEl.value;
 
   modelEl.replaceChildren();
   config.options.forEach(function(optionConfig) {
     var option = document.createElement('option');
     option.value = optionConfig.value;
-    option.textContent = optionConfig.label;
+    option.textContent = optionConfig.labelKey ? t(optionConfig.labelKey) : optionConfig.label;
     modelEl.appendChild(option);
   });
 
@@ -1395,7 +2015,7 @@ function syncModelOptions(typeId, modelId, hintId) {
     return optionConfig.value === previousValue;
   });
   modelEl.value = keepPrevious ? previousValue : '';
-  hintEl.textContent = config.hint;
+  hintEl.textContent = t(config.hintKey || 'model_hint_default');
 }
 
 function syncSpawnModelOptions() {
@@ -1478,35 +2098,41 @@ function normalizeCurrentTarget() {
 }
 
 function getPromptSet(agent) {
-  if (!agent || currentTarget === 'master') return QUICK_PROMPTS.master;
-  if (agent.agent_type === 'claude') return QUICK_PROMPTS.claudeWorker;
-  if (agent.agent_type === 'codex') return QUICK_PROMPTS.codexWorker;
-  return QUICK_PROMPTS.genericWorker;
+  var bundle = QUICK_PROMPTS[currentLang] || QUICK_PROMPTS.en;
+  if (!agent || currentTarget === 'master') return bundle.master;
+  if (agent.agent_type === 'claude') return bundle.claudeWorker;
+  if (agent.agent_type === 'codex') return bundle.codexWorker;
+  return bundle.genericWorker;
 }
 
 function setComposerState() {
   var agent = getSelectedAgent();
-  var title = currentTarget === 'master' ? 'Send to master' : 'Send to ' + currentTarget;
-  var meta = 'Choose an agent and type a concise instruction.';
-  var placeholder = 'Type your instruction here. Enter sends. Shift+Enter inserts a new line.';
+  var title = currentTarget === 'master' ? t('send_to_master') : t('send_to_target', { target: currentTarget });
+  var meta = t('choose_target_help');
+  var placeholder = t('composer_placeholder');
 
   if (agent) {
-    var modelSuffix = agent.model ? ' / ' + agent.model : '';
-    meta = 'Target: ' + agent.name + ' · ' + agent.agent_type + modelSuffix;
-    placeholder = currentTarget === 'master'
-      ? 'Example: 현재 상태를 정리하고 필요한 worker만 배정해줘.'
-      : 'Example: 현재 진행 상황 한 줄로 보고하고 바로 다음 단계 진행해줘.';
+    meta = t('target_meta', {
+      name: agent.name,
+      provider: providerLabel(agent.agent_type),
+      model: providerModelSuffix(agent.model)
+    });
+    placeholder = currentTarget === 'master' ? t('placeholder_master') : t('placeholder_worker');
   }
 
   document.getElementById('composerTitle').textContent = title;
   document.getElementById('composerTarget').textContent = meta;
   document.getElementById('sendMessage').placeholder = placeholder;
-  document.getElementById('conversationHint').textContent = meta + ' · Open iTerm for full terminal interaction.';
+  document.getElementById('composerHelp').textContent = t('composer_help_default');
+  document.getElementById('conversationHint').textContent = agent
+    ? t('conversation_hint_full', { meta: meta })
+    : t('conversation_default_hint');
 }
 
 function renderPromptChips() {
   var container = document.getElementById('promptChips');
   container.replaceChildren();
+  if (!currentSession) return;
   var prompts = getPromptSet(getSelectedAgent());
   prompts.forEach(function(prompt) {
     var button = document.createElement('button');
@@ -1524,7 +2150,7 @@ function summarizePeek(text) {
   var lines = text.split('\n').map(function(line) { return line.trimEnd(); }).filter(function(line) {
     return line.trim() !== '';
   });
-  if (lines.length === 0) return '(No output yet)';
+  if (lines.length === 0) return t('no_output_yet');
   return lines.slice(-14).join('\n');
 }
 
@@ -1536,7 +2162,7 @@ function renderChatThread() {
   if (!currentSession) {
     var empty = document.createElement('div');
     empty.className = 'empty-thread';
-    empty.textContent = 'Select a session to start chatting with an agent.';
+    empty.textContent = t('select_session_chat');
     container.appendChild(empty);
     return;
   }
@@ -1544,8 +2170,8 @@ function renderChatThread() {
   var intro = document.createElement('div');
   intro.className = 'bubble system';
   intro.innerHTML =
-    '<span class="bubble-meta">workflow</span>' +
-    'Send short instructions here. Use <strong>Open iTerm</strong> when you want direct terminal control or long interactive work.';
+    '<span class="bubble-meta">' + escapeHtml(t('workflow')) + '</span>' +
+    escapeHtml(t('dashboard_workflow_intro'));
   container.appendChild(intro);
 
   var history = getSessionHistory(currentSession).filter(function(item) {
@@ -1555,7 +2181,7 @@ function renderChatThread() {
   if (history.length === 0 && !latestPeekText) {
     var placeholder = document.createElement('div');
     placeholder.className = 'empty-thread';
-    placeholder.textContent = 'No messages yet for this target. Try a quick prompt below.';
+    placeholder.textContent = t('no_messages_target');
     container.appendChild(placeholder);
   }
 
@@ -1563,7 +2189,7 @@ function renderChatThread() {
     var bubble = document.createElement('div');
     bubble.className = 'bubble ' + (item.kind === 'outbound' ? 'user' : 'system');
     bubble.innerHTML =
-      '<span class="bubble-meta">' + escapeHtml((item.kind === 'outbound' ? 'you' : 'system') + ' · ' + formatLocalTime(item.time)) + '</span>' +
+      '<span class="bubble-meta">' + escapeHtml((item.kind === 'outbound' ? t('you') : t('system')) + ' · ' + formatLocalTime(item.time)) + '</span>' +
       escapeHtml(item.text);
     container.appendChild(bubble);
   });
@@ -1572,7 +2198,7 @@ function renderChatThread() {
     var snapshotBubble = document.createElement('div');
     snapshotBubble.className = 'bubble snapshot';
     snapshotBubble.innerHTML =
-      '<span class="bubble-meta">latest output</span>' +
+      '<span class="bubble-meta">' + escapeHtml(t('latest_output')) + '</span>' +
       escapeHtml(summarizePeek(latestPeekText));
     container.appendChild(snapshotBubble);
   }
@@ -1592,14 +2218,14 @@ function renderActivityFeed() {
   if (lines.length === 0) {
     var empty = document.createElement('div');
     empty.className = 'empty';
-    empty.textContent = 'No activity yet.';
+    empty.textContent = t('no_activity');
     container.appendChild(empty);
     return;
   }
 
   lines.slice(-12).reverse().forEach(function(line) {
     var match = line.match(/^\[(.*?)\]\s+(.*)$/);
-    var time = match ? match[1] : 'log';
+    var time = match ? match[1] : t('log_label');
     var text = match ? match[2] : line;
 
     var item = document.createElement('div');
@@ -1621,38 +2247,39 @@ function renderActivityFeed() {
 
 function renderSummary() {
   if (!latestStatus) {
-    document.getElementById('summaryTitle').textContent = 'No session selected';
-    document.getElementById('summaryProject').textContent = 'Select a session to start.';
-    document.getElementById('summaryHint').textContent = 'Choose a session, then send short instructions here or open iTerm for direct terminal work.';
+    setText('summaryTitle', 'no_session_selected');
+    setText('summaryProject', 'select_session_prompt');
+    setText('summaryHint', 'summary_hint_default');
     document.getElementById('statMaster').textContent = '-';
-    document.getElementById('statMasterCaption').textContent = 'Master agent';
+    setText('statMasterCaption', 'provider_and_model');
     document.getElementById('statWorkers').textContent = '0';
-    document.getElementById('statWorkersCaption').textContent = 'No workers running';
-    document.getElementById('statLastTask').textContent = 'No task yet';
-    document.getElementById('statLastTaskCaption').textContent = 'Task count: 0';
+    setText('statWorkersCaption', 'idle_team');
+    setText('statLastTask', 'no_task_yet');
+    setText('statLastTaskCaption', 'dispatch_history');
     document.getElementById('statStarted').textContent = '-';
-    document.getElementById('statStartedCaption').textContent = 'Session started';
+    setText('statStartedCaption', 'session_time');
+    renderOverview();
     return;
   }
 
-  var masterModel = latestStatus.master.model ? ' / ' + latestStatus.master.model : '';
   document.getElementById('summaryTitle').textContent = latestStatus.session;
   document.getElementById('summaryProject').textContent = latestStatus.project;
-  document.getElementById('summaryHint').textContent =
-    'Current target: ' + currentTarget + '. Dispatch here, inspect raw output below, and jump into iTerm for terminal-native work.';
+  document.getElementById('summaryHint').textContent = t('summary_hint_active', { target: currentTarget });
 
-  document.getElementById('statMaster').textContent = latestStatus.master.agent_type + masterModel;
-  document.getElementById('statMasterCaption').textContent = 'Master agent';
+  document.getElementById('statMaster').textContent = describeAgent(latestStatus.master, true);
+  setText('statMasterCaption', 'provider_and_model');
 
   document.getElementById('statWorkers').textContent = String(latestStatus.workers.length);
-  document.getElementById('statWorkersCaption').textContent =
-    latestStatus.workers.length > 0 ? latestStatus.workers.length + ' active worker(s)' : 'No workers running';
+  document.getElementById('statWorkersCaption').textContent = latestStatus.workers.length > 0
+    ? t('active_workers', { count: latestStatus.workers.length })
+    : t('no_workers_running');
 
-  document.getElementById('statLastTask').textContent = latestStatus.last_task || 'No task yet';
-  document.getElementById('statLastTaskCaption').textContent = 'Task count: ' + latestStatus.task_count;
+  document.getElementById('statLastTask').textContent = latestStatus.last_task || t('no_task_yet');
+  document.getElementById('statLastTaskCaption').textContent = t('task_count', { count: latestStatus.task_count });
 
   document.getElementById('statStarted').textContent = formatLocalTime(latestStatus.started);
-  document.getElementById('statStartedCaption').textContent = 'Session started';
+  setText('statStartedCaption', 'session_started');
+  renderOverview();
 }
 
 var currentBrowsePath = '';
@@ -1690,7 +2317,7 @@ async function browseTo(path) {
     });
 
     var createBtn = document.getElementById('createBtn');
-    createBtn.textContent = res.is_git ? 'Create Session Here (git)' : 'Select This Folder';
+    createBtn.textContent = res.is_git ? t('create_session_here_git') : t('select_this_folder');
     createBtn.style.background = res.is_git ? 'var(--green)' : '';
 
     var listEl = document.getElementById('dirList');
@@ -1728,7 +2355,7 @@ async function browseTo(path) {
 
       var selectBtn = document.createElement('button');
       selectBtn.className = 'dir-select';
-      selectBtn.textContent = 'select';
+      selectBtn.textContent = t('select_short');
       selectBtn.addEventListener('click', function(event) {
         event.stopPropagation();
         document.getElementById('newProjectDir').value = dir.path;
@@ -1740,7 +2367,7 @@ async function browseTo(path) {
       listEl.appendChild(item);
     });
   } catch (error) {
-    toast('Browse failed: ' + error.message, 'error');
+    toast(t('browse_failed', { message: error.message }), 'error');
   }
 }
 
@@ -1809,13 +2436,13 @@ async function refreshSessions() {
 
       var workers = document.createElement('div');
       workers.className = 'sc-workers';
-      workers.textContent = String(session.worker_count || 0) + ' worker(s)';
+      workers.textContent = t('worker_count', { count: session.worker_count || 0 });
       card.appendChild(workers);
 
       var close = document.createElement('button');
       close.className = 'sc-close';
       close.textContent = '\u00d7';
-      close.title = 'Stop session';
+      close.title = t('stop_session');
       close.addEventListener('click', function(event) {
         event.stopPropagation();
         stopSessionByName(session.name);
@@ -1827,7 +2454,7 @@ async function refreshSessions() {
 
     var newCard = document.createElement('div');
     newCard.className = 'new-session-card';
-    newCard.textContent = '+ New Session';
+    newCard.textContent = t('new_session');
     newCard.addEventListener('click', showCreateModal);
     row.appendChild(newCard);
 
@@ -1852,10 +2479,10 @@ async function refreshSessions() {
     }
 
     document.getElementById('statusDot').className = 'status-dot ' + (sessions.length > 0 ? 'on' : 'off');
-    document.getElementById('statusText').textContent = sessions.length + ' session(s)';
+    document.getElementById('statusText').textContent = t('sessions_count', { count: sessions.length });
   } catch (error) {
     document.getElementById('statusDot').className = 'status-dot err';
-    document.getElementById('statusText').textContent = 'disconnected';
+    document.getElementById('statusText').textContent = t('disconnected');
   }
 }
 
@@ -1879,7 +2506,7 @@ function createAgentElement(name, agentType, model, isActive) {
 
   var meta = document.createElement('div');
   meta.className = 'agent-meta';
-  meta.textContent = model ? agentType + ' / ' + model : agentType;
+  meta.textContent = describeAgent({ agent_type: agentType, model: model }, false);
   info.appendChild(meta);
 
   left.appendChild(info);
@@ -1900,7 +2527,7 @@ function createAgentElement(name, agentType, model, isActive) {
   if (name !== 'master') {
     var stopBtn = document.createElement('button');
     stopBtn.className = 'agent-btn';
-    stopBtn.textContent = 'stop';
+    stopBtn.textContent = t('interrupt_short');
     stopBtn.addEventListener('click', function(event) {
       event.stopPropagation();
       interruptAgent(name);
@@ -1909,7 +2536,7 @@ function createAgentElement(name, agentType, model, isActive) {
 
     var killBtn = document.createElement('button');
     killBtn.className = 'agent-btn kill';
-    killBtn.textContent = 'kill';
+    killBtn.textContent = t('kill_short');
     killBtn.addEventListener('click', function(event) {
       event.stopPropagation();
       killAgent(name);
@@ -1935,7 +2562,7 @@ async function refreshStatus() {
       container.appendChild(createAgentElement(worker.name, worker.agent_type, worker.model, currentTarget === worker.name));
     });
 
-    document.getElementById('agentCount').textContent = String(1 + latestStatus.workers.length) + ' agents';
+    document.getElementById('agentCount').textContent = t('agent_count', { count: 1 + latestStatus.workers.length });
     renderSummary();
     setComposerState();
     renderPromptChips();
@@ -1945,7 +2572,7 @@ async function refreshStatus() {
     fallback.replaceChildren();
     var empty = document.createElement('div');
     empty.className = 'empty';
-    empty.textContent = 'Failed to load agents.';
+    empty.textContent = t('failed_load_agents');
     fallback.appendChild(empty);
   }
 }
@@ -1969,7 +2596,7 @@ function selectSession(name) {
   renderPromptChips();
   renderChatThread();
   renderActivityFeed();
-  document.getElementById('terminal').textContent = 'Loading live snapshot...';
+  document.getElementById('terminal').textContent = t('loading_snapshot');
   refreshCurrentView();
 }
 
@@ -1988,7 +2615,7 @@ function selectAgent(name) {
 async function createSession() {
   var dir = document.getElementById('newProjectDir').value.trim();
   if (!dir) {
-    toast('Path required', 'error');
+    toast(t('path_required'), 'error');
     return;
   }
 
@@ -2002,25 +2629,25 @@ async function createSession() {
         master_model: document.getElementById('createMasterModel').value || null
       })
     });
-    toast(result.message);
+    toast(t('session_created', { session: result.session }));
     hideCreateModal();
     document.getElementById('newProjectDir').value = '';
     await refreshSessions();
     if (result.session) selectSession(result.session);
   } catch (error) {
-    toast('Failed: ' + error.message, 'error');
+    toast(t('create_failed', { message: error.message }), 'error');
   }
 }
 
 async function stopSessionByName(name) {
-  if (!confirm('Stop session ' + name + '?')) return;
+  if (!confirm(t('stop_session_confirm', { session: name }))) return;
   try {
     await api('/api/sessions/' + name, { method: 'DELETE' });
-    toast('Session stopped');
+    toast(t('session_stopped'));
     if (currentSession === name) currentSession = '';
     await refreshSessions();
   } catch (error) {
-    toast('Failed: ' + error.message, 'error');
+    toast(t('failed_prefix', { message: error.message }), 'error');
   }
 }
 
@@ -2033,11 +2660,11 @@ async function peekAgent() {
   if (!currentSession || !currentTarget) return;
   try {
     latestPeekText = await api('/api/peek/' + currentSession + '/' + currentTarget + '?lines=120');
-    document.getElementById('terminal').textContent = latestPeekText || '(empty)';
+    document.getElementById('terminal').textContent = latestPeekText || t('empty_terminal');
     renderChatThread();
   } catch (error) {
     latestPeekText = '';
-    document.getElementById('terminal').textContent = 'Error: ' + error.message;
+    document.getElementById('terminal').textContent = t('failed_prefix', { message: error.message });
     renderChatThread();
   }
 }
@@ -2066,7 +2693,7 @@ async function sendMessage() {
       time: new Date().toISOString()
     });
 
-    toast('Sent to ' + currentTarget);
+    toast(t('sent_to_target_toast', { target: currentTarget }));
     input.value = '';
     renderChatThread();
     setTimeout(function() {
@@ -2074,7 +2701,7 @@ async function sendMessage() {
       refreshLog();
     }, 900);
   } catch (error) {
-    toast('Send failed: ' + error.message, 'error');
+    toast(t('send_failed', { message: error.message }), 'error');
   } finally {
     sendInFlight = false;
   }
@@ -2093,10 +2720,10 @@ async function openTerminal(target) {
         target: resolvedTarget
       })
     });
-    toast(result.message);
-    addSystemNote('Opened ' + resolvedTarget + ' in iTerm.', resolvedTarget);
+    toast(t('terminal_opened', { target: resolvedTarget }));
+    addSystemNote(t('terminal_opened', { target: resolvedTarget }), resolvedTarget);
   } catch (error) {
-    toast('Open failed: ' + error.message, 'error');
+    toast(t('open_failed', { message: error.message }), 'error');
   }
 }
 
@@ -2107,7 +2734,7 @@ function fillSpawnTask(text) {
 
 async function spawnWorker() {
   if (!currentSession) {
-    toast('Select a session first', 'error');
+    toast(t('spawn_select_session_first'), 'error');
     return;
   }
   if (spawnInFlight) return;
@@ -2130,16 +2757,20 @@ async function spawnWorker() {
         task: task || ''
       })
     });
-    toast(result.message);
+    var successMessage = t('spawn_success', {
+      count: count,
+      provider: providerLabel(workerType)
+    });
+    toast(successMessage);
     document.getElementById('spawnTask').value = '';
-    addSystemNote(result.message + (task ? ' Task: ' + task : ''), '*');
+    addSystemNote(successMessage + (task ? '\n' + t('task_label') + ': ' + task : ''), '*');
     setTimeout(function() {
       refreshStatus();
       refreshSessions();
       refreshLog();
     }, 1200);
   } catch (error) {
-    toast('Spawn failed: ' + error.message, 'error');
+    toast(t('spawn_failed', { message: error.message }), 'error');
   } finally {
     spawnInFlight = false;
   }
@@ -2153,13 +2784,13 @@ async function interruptAll() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ session: currentSession, target: 'all' })
     });
-    toast('Interrupted all');
-    addSystemNote('Interrupted all agents.', '*');
+    toast(t('interrupted_all_toast'));
+    addSystemNote(t('interrupted_note_all'), '*');
     setTimeout(function() {
       refreshCurrentView();
     }, 400);
   } catch (error) {
-    toast('Failed: ' + error.message, 'error');
+    toast(t('failed_prefix', { message: error.message }), 'error');
   }
 }
 
@@ -2171,13 +2802,13 @@ async function interruptAgent(name) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ session: currentSession, target: name })
     });
-    toast('Interrupted ' + name);
-    addSystemNote('Interrupted ' + name + '.', name);
+    toast(t('interrupted_target_toast', { target: name }));
+    addSystemNote(t('interrupted_note_target', { target: name }), name);
     setTimeout(function() {
       refreshCurrentView();
     }, 400);
   } catch (error) {
-    toast('Failed: ' + error.message, 'error');
+    toast(t('failed_prefix', { message: error.message }), 'error');
   }
 }
 
@@ -2189,8 +2820,8 @@ async function killAgent(name) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ session: currentSession, target: name })
     });
-    toast('Killed ' + name);
-    addSystemNote('Killed ' + name + '.', name);
+    toast(t('killed_target_toast', { target: name }));
+    addSystemNote(t('killed_note_target', { target: name }), name);
     setTimeout(function() {
       refreshCurrentView();
       refreshStatus();
@@ -2198,13 +2829,13 @@ async function killAgent(name) {
       refreshLog();
     }, 700);
   } catch (error) {
-    toast('Failed: ' + error.message, 'error');
+    toast(t('failed_prefix', { message: error.message }), 'error');
   }
 }
 
 async function killWorkers() {
   if (!currentSession) return;
-  if (!confirm('Kill all workers?')) return;
+  if (!confirm(t('kill_workers_confirm'))) return;
 
   try {
     await api('/api/kill-workers', {
@@ -2212,8 +2843,8 @@ async function killWorkers() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ session: currentSession })
     });
-    toast('All workers killed');
-    addSystemNote('Killed all workers.', '*');
+    toast(t('all_workers_killed_toast'));
+    addSystemNote(t('killed_note_all'), '*');
     setTimeout(function() {
       refreshCurrentView();
       refreshStatus();
@@ -2221,18 +2852,18 @@ async function killWorkers() {
       refreshLog();
     }, 700);
   } catch (error) {
-    toast('Failed: ' + error.message, 'error');
+    toast(t('failed_prefix', { message: error.message }), 'error');
   }
 }
 
 function updateAutoRefreshButton() {
   var button = document.getElementById('autoRefreshBtn');
   if (autoRefreshInterval) {
-    button.textContent = 'Auto: ON';
+    button.textContent = t('auto_on');
     button.style.borderColor = 'var(--green)';
     button.style.color = 'var(--green)';
   } else {
-    button.textContent = 'Auto: OFF';
+    button.textContent = t('auto_off');
     button.style.borderColor = '';
     button.style.color = '';
   }
@@ -2297,6 +2928,7 @@ document.getElementById('newProjectDir').addEventListener('keydown', function(ev
   }
 });
 
+applyTranslations();
 syncSpawnModelOptions();
 syncCreateMasterModelOptions();
 renderSummary();
