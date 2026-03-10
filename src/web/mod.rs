@@ -11,6 +11,7 @@ use axum::{
 };
 use rust_embed::RustEmbed;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 
 use crate::{agent, meta, tmux};
 
@@ -21,6 +22,9 @@ struct BrandAssets;
 pub async fn serve(port: u16) -> anyhow::Result<()> {
     let app = Router::new()
         .route("/", get(index))
+        .route("/site.webmanifest", get(site_manifest))
+        .route("/favicon.ico", get(default_favicon))
+        .route("/apple-touch-icon.png", get(default_apple_touch_icon))
         .route("/brand/:asset", get(brand_asset))
         // Session management
         .route("/api/sessions", get(api_sessions))
@@ -51,11 +55,9 @@ async fn index() -> Html<String> {
     Html(include_str!("../../static/index.html").to_string())
 }
 
-async fn brand_asset(
-    axum::extract::Path(asset): axum::extract::Path<String>,
-) -> Result<impl IntoResponse, StatusCode> {
-    let file = BrandAssets::get(&asset).ok_or(StatusCode::NOT_FOUND)?;
-    let mime = mime_guess::from_path(&asset).first_or_octet_stream();
+fn embedded_asset_response(asset: &str) -> Result<impl IntoResponse, StatusCode> {
+    let file = BrandAssets::get(asset).ok_or(StatusCode::NOT_FOUND)?;
+    let mime = mime_guess::from_path(asset).first_or_octet_stream();
 
     let mut headers = HeaderMap::new();
     headers.insert(
@@ -64,6 +66,61 @@ async fn brand_asset(
     );
 
     Ok((headers, Body::from(file.data.into_owned())))
+}
+
+async fn site_manifest() -> Result<impl IntoResponse, StatusCode> {
+    let manifest = json!({
+        "name": "CrewMux Console",
+        "short_name": "CrewMux",
+        "description": "CrewMux console for coordinating tmux-based AI agent teams.",
+        "start_url": "/",
+        "scope": "/",
+        "display": "standalone",
+        "background_color": "#081222",
+        "theme_color": "#081222",
+        "icons": [
+            {
+                "src": "/brand/crewmux-app-icon-192.png",
+                "sizes": "192x192",
+                "type": "image/png",
+                "purpose": "any"
+            },
+            {
+                "src": "/brand/crewmux-app-icon-512.png",
+                "sizes": "512x512",
+                "type": "image/png",
+                "purpose": "any"
+            },
+            {
+                "src": "/brand/crewmux-app-icon.png",
+                "sizes": "1024x1024",
+                "type": "image/png",
+                "purpose": "any"
+            }
+        ]
+    });
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        header::CONTENT_TYPE,
+        HeaderValue::from_static("application/manifest+json"),
+    );
+
+    Ok((headers, Json(manifest)))
+}
+
+async fn default_favicon() -> Result<impl IntoResponse, StatusCode> {
+    embedded_asset_response("crewmux-favicon.png")
+}
+
+async fn default_apple_touch_icon() -> Result<impl IntoResponse, StatusCode> {
+    embedded_asset_response("crewmux-app-icon.png")
+}
+
+async fn brand_asset(
+    axum::extract::Path(asset): axum::extract::Path<String>,
+) -> Result<impl IntoResponse, StatusCode> {
+    embedded_asset_response(&asset)
 }
 
 // --- API types ---
