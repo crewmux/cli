@@ -32,5 +32,5 @@ jobs:
       - name: Build release
         run: cargo build --release
 
-      - name: Check installer syntax
-        run: bash -n install.sh
+      - name: Check shell script syntax
+        run: bash -n install.sh scripts/*.sh

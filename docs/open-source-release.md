@@ -18,7 +18,8 @@
 4. README의 install URL을 실제 GitHub raw URL로 교체
 5. 스크린샷 또는 짧은 GIF 추가
 6. issue / PR 템플릿 추가 여부 결정
-7. 첫 릴리스 태그와 changelog 작성
+7. stable release 전략 문서화 및 Homebrew stable formula 경로 준비
+8. 첫 릴리스 태그와 changelog 작성
 
 ## 추천 GitHub 공개 구성
 
@@ -26,8 +27,16 @@
 - `CONTRIBUTING.md`
 - `docs/`
 - `.github/workflows/ci.yml`
+- `.github/workflows/release.yml`
 - `install.sh`
 - 예시 스크린샷 1장
+
+## stable release 준비
+
+- [docs/release-strategy.md](/Users/ko/Documents/project/ai-ctl/docs/release-strategy.md)에 stable / HEAD 채널 구분과 태그 정책을 문서화
+- `scripts/release-preflight.sh` 로 release 직전 검증 절차를 고정
+- `scripts/update-homebrew-stable.sh` 로 stable Homebrew formula 생성 자동화
+- `HOMEBREW_TAP_TOKEN` secret이 있으면 release workflow에서 tap repo까지 자동 갱신
 
 ## 네이밍 메모
 

@@ -6,6 +6,8 @@
 
 - [Formula/crewmux.rb](/Users/ko/Documents/project/ai-ctl/Formula/crewmux.rb): 현재 `--HEAD` 설치용 formula
 - [scripts/render-homebrew-formula.sh](/Users/ko/Documents/project/ai-ctl/scripts/render-homebrew-formula.sh): stable release formula 생성 스크립트
+- [scripts/update-homebrew-stable.sh](/Users/ko/Documents/project/ai-ctl/scripts/update-homebrew-stable.sh): source archive 다운로드 + SHA256 계산 + stable formula 생성 자동화
+- [docs/release-strategy.md](/Users/ko/Documents/project/ai-ctl/docs/release-strategy.md): stable / HEAD 릴리스 전략
 
 ## 저장소 구조
 
@@ -34,16 +36,13 @@ brew install crewmux/tap/crewmux
 ## stable release 배포 흐름
 
 1. 메인 저장소에 `vX.Y.Z` 태그 생성
-2. GitHub release source tarball URL 확인
-3. SHA256 계산
-4. 아래 스크립트로 stable formula 생성
-5. 결과를 `crewmux/homebrew-tap/Formula/crewmux.rb`에 커밋
+2. release workflow 또는 로컬 스크립트로 stable formula 생성
+3. 결과를 `crewmux/homebrew-tap/Formula/crewmux.rb`에 반영
 
 예시:
 
 ```bash
-shasum -a 256 crewmux-0.1.0.tar.gz
-./scripts/render-homebrew-formula.sh 0.1.0 <sha256> > /tmp/crewmux.rb
+./scripts/update-homebrew-stable.sh 0.1.0 /tmp/crewmux.rb
 ```
 
 기본 URL은:
@@ -63,8 +62,10 @@ https://github.com/crewmux/cli/archive/refs/tags/v<version>.tar.gz
 stable formula를 생성할 때는:
 
 ```bash
-./scripts/render-homebrew-formula.sh 0.1.0 <sha256> > /path/to/homebrew-tap/Formula/crewmux.rb
+./scripts/update-homebrew-stable.sh 0.1.0 /path/to/homebrew-tap/Formula/crewmux.rb
 ```
+
+GitHub Actions를 통한 자동 반영을 원하면 `HOMEBREW_TAP_TOKEN` secret을 설정하면 됩니다. 자세한 흐름은 [docs/release-strategy.md](/Users/ko/Documents/project/ai-ctl/docs/release-strategy.md)에 정리돼 있습니다.
 
 ## 로컬 검증
 
@@ -85,3 +86,4 @@ brew untap crewmux/tap
 - `claude`와 `codex`는 runtime 의존성이며 formula가 자동 설치하지 않습니다
 - `tmux`는 Homebrew dependency로 선언했습니다
 - stable formula를 쓰려면 첫 tagged release가 먼저 필요합니다
+- tag 기반 stable release는 `.github/workflows/release.yml`이 담당합니다

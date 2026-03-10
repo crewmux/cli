@@ -1,0 +1,123 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve release version
+        run: echo "VERSION=${VERSION#v}" >> "$GITHUB_ENV"
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run release preflight
+        run: ./scripts/release-preflight.sh "$VERSION"
+
+  publish:
+    needs: preflight
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve release version
+        run: echo "VERSION=${VERSION#v}" >> "$GITHUB_ENV"
+
+      - name: Generate Homebrew formula and checksum
+        run: |
+          archive_url="https://github.com/${GITHUB_REPOSITORY}/archive/refs/tags/v${VERSION}.tar.gz"
+          ./scripts/update-homebrew-stable.sh "$VERSION" "$RUNNER_TEMP/crewmux.rb" "$archive_url"
+          curl -fsSL "$archive_url" -o "$RUNNER_TEMP/crewmux-v${VERSION}.tar.gz"
+          shasum -a 256 "$RUNNER_TEMP/crewmux-v${VERSION}.tar.gz" > "$RUNNER_TEMP/crewmux-v${VERSION}.sha256"
+
+      - name: Write release notes
+        run: |
+          cat > "$RUNNER_TEMP/release-notes.md" <<EOF
+          ## Installation
+
+          \`\`\`bash
+          brew tap crewmux/tap
+          brew install crewmux/tap/crewmux
+          \`\`\`
+
+          ## Release Guarantees
+
+          - version tag: \`v${VERSION}\`
+          - CLI name: \`crewmux\`
+          - dashboard default address: \`http://localhost:7700\`
+          - release gates: \`cargo fmt --check\`, \`cargo test\`, \`cargo clippy --all-targets --all-features -- -D warnings\`, \`cargo build --release\`
+
+          ## Homebrew
+
+          The stable Homebrew formula and source archive checksum are attached to this release.
+          EOF
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: ${{ runner.temp }}/release-notes.md
+          files: |
+            ${{ runner.temp }}/crewmux.rb
+            ${{ runner.temp }}/crewmux-v${{ env.VERSION }}.sha256
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: crewmux-release-assets-v${{ env.VERSION }}
+          path: |
+            ${{ runner.temp }}/crewmux.rb
+            ${{ runner.temp }}/crewmux-v${{ env.VERSION }}.sha256
+
+  update-homebrew-tap:
+    needs: publish
+    if: ${{ secrets.HOMEBREW_TAP_TOKEN != '' }}
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve release version
+        run: echo "VERSION=${VERSION#v}" >> "$GITHUB_ENV"
+
+      - name: Check out Homebrew tap
+        uses: actions/checkout@v4
+        with:
+          repository: crewmux/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: homebrew-tap
+
+      - name: Update stable formula
+        run: ./scripts/update-homebrew-stable.sh "$VERSION" "homebrew-tap/Formula/crewmux.rb"
+
+      - name: Commit and push tap update
+        run: |
+          if git -C homebrew-tap diff --quiet -- Formula/crewmux.rb; then
+            echo "No tap changes to commit"
+            exit 0
+          fi
+          git -C homebrew-tap config user.name "github-actions[bot]"
+          git -C homebrew-tap config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C homebrew-tap add Formula/crewmux.rb
+          git -C homebrew-tap commit -m "Release crewmux v${VERSION}"
+          git -C homebrew-tap push origin HEAD:main
