@@ -347,10 +347,10 @@ echo ""
 echo -e "${GREEN}${BOLD}Done!${NC}"
 echo ""
 echo -e "  ${BOLD}Quick start:${NC}"
-echo -e "    ${CYAN}crewmux team start${NC}                  Start a team session"
+echo -e "    ${CYAN}crewmux team start${NC}                        Start a team session"
 echo -e "    ${CYAN}crewmux task spawn -t codex -m gpt-5.3-codex${NC} \"fix auth\"   Spawn worker"
-echo -e "    ${CYAN}crewmux ctl status${NC}                  Check status"
-echo -e "    ${CYAN}crewmux web${NC}                         Open dashboard manually"
+echo -e "    ${CYAN}crewmux ctl status${NC}                        Check status"
+echo -e "    ${CYAN}crewmux web${NC}                               Open dashboard manually"
 echo -e "    ${CYAN}open http://localhost:7700${NC}            Dashboard (if installed as service)"
 
 if ((${#EXTRA_PATHS[@]} > 0)); then

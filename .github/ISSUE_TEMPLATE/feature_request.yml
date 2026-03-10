@@ -1,0 +1,69 @@
+name: Feature Request
+description: Suggest an improvement to CrewMux
+title: "[Feature] "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement.
+
+        Please focus on the concrete workflow problem you want to solve. Korean or English is fine.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What workflow is currently painful or missing?
+      placeholder: Explain the operator or contributor problem first.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Solution
+      description: Describe the behavior you want.
+      placeholder: What should CrewMux do instead?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Include workarounds or competing approaches if you have them.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - CLI
+        - Web Dashboard
+        - Installer
+        - Homebrew / Release
+        - Orchestration / Prompting
+        - Docs
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Expected Impact
+      description: Why is this worth adding?
+      placeholder: Faster onboarding, fewer conflicts, better visibility, etc.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Mockups, examples, references, or constraints.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Preflight
+      options:
+        - label: I searched existing issues and release notes first.
+          required: true
+        - label: This is a product or workflow request, not a one-off support question.
+          required: true

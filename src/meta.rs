@@ -8,7 +8,7 @@ use std::path::PathBuf;
 const TEAM_DIR_NAME: &str = ".crewmux";
 const LEGACY_TEAM_DIR_NAME: &str = ".ai-team";
 const SESSION_PREFIX: &str = "crewmux";
-const LEGACY_SESSION_PREFIXES: [&str; 2] = ["cm", "ai"];
+const LEGACY_SESSION_PREFIXES: &[&str] = &["cm", "ai"];
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TeamMeta {
@@ -114,7 +114,8 @@ pub fn is_valid_session_name(session: &str) -> bool {
 
 fn session_candidates(dir: &str) -> Vec<String> {
     let base = session_basename(dir);
-    let mut candidates = vec![format!("{}-{}", SESSION_PREFIX, base)];
+    let mut candidates = Vec::with_capacity(1 + LEGACY_SESSION_PREFIXES.len());
+    candidates.push(format!("{}-{}", SESSION_PREFIX, base));
     candidates.extend(
         LEGACY_SESSION_PREFIXES
             .iter()

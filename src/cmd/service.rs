@@ -1,7 +1,8 @@
-use anyhow::{Context, Result};
+use anyhow::{ensure, Context, Result};
 use colored::*;
 use std::fs;
 use std::path::PathBuf;
+use std::process::Command;
 
 const LABEL: &str = "com.crewmux.web";
 
@@ -12,7 +13,7 @@ fn plist_path() -> PathBuf {
         .join(format!("{}.plist", LABEL))
 }
 
-fn cm_binary_path() -> Result<PathBuf> {
+fn binary_path() -> Result<PathBuf> {
     std::env::current_exe().context("Cannot determine binary path")
 }
 
@@ -30,10 +31,32 @@ fn xml_escape(s: &str) -> String {
         .replace('\'', "&apos;")
 }
 
+fn launchctl_domain() -> Result<String> {
+    if let Ok(uid) = std::env::var("UID") {
+        let uid = uid.trim();
+        if !uid.is_empty() {
+            return Ok(format!("gui/{}", uid));
+        }
+    }
+
+    let output = Command::new("id")
+        .arg("-u")
+        .output()
+        .context("Failed to determine current UID")?;
+    ensure!(output.status.success(), "Failed to determine current UID");
+
+    let uid = String::from_utf8(output.stdout).context("Current UID is not valid UTF-8")?;
+    let uid = uid.trim();
+    ensure!(!uid.is_empty(), "Current UID is empty");
+
+    Ok(format!("gui/{}", uid))
+}
+
 pub fn install() -> Result<()> {
-    let bin = cm_binary_path()?;
+    let bin = binary_path()?;
     let plist = plist_path();
     let logs = log_dir();
+    let domain = launchctl_domain()?;
 
     fs::create_dir_all(&logs)?;
     fs::create_dir_all(plist.parent().unwrap())?;
@@ -80,13 +103,13 @@ pub fn install() -> Result<()> {
 
     fs::write(&plist, content)?;
 
-    // Unload first if already loaded
-    let _ = std::process::Command::new("launchctl")
-        .args(["unload", &plist.to_string_lossy()])
+    // Remove any previous instance before loading the new plist.
+    let _ = Command::new("launchctl")
+        .args(["bootout", &domain, &plist.to_string_lossy()])
         .output();
 
-    let status = std::process::Command::new("launchctl")
-        .args(["load", &plist.to_string_lossy()])
+    let status = Command::new("launchctl")
+        .args(["bootstrap", &domain, &plist.to_string_lossy()])
         .status()
         .context("Failed to run launchctl")?;
 
@@ -114,14 +137,15 @@ pub fn install() -> Result<()> {
 
 pub fn uninstall() -> Result<()> {
     let plist = plist_path();
+    let domain = launchctl_domain()?;
 
     if !plist.exists() {
         println!("{}", "Service not installed.".yellow());
         return Ok(());
     }
 
-    let _ = std::process::Command::new("launchctl")
-        .args(["unload", &plist.to_string_lossy()])
+    let _ = Command::new("launchctl")
+        .args(["bootout", &domain, &plist.to_string_lossy()])
         .status();
 
     fs::remove_file(&plist)?;

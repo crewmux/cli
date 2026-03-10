@@ -6,7 +6,7 @@
 
 ```text
 ┌──────────────────────────────────────────────┐
-│ crewmux (single binary)                    │
+│ crewmux (single binary)                      │
 │  ├─ team  -> tmux session lifecycle         │
 │  ├─ task  -> worker spawn + dispatch        │
 │  ├─ ctl   -> inspect / send / interrupt     │

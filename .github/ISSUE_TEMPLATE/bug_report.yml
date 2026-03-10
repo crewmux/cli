@@ -1,0 +1,102 @@
+name: Bug Report
+description: Report a reproducible problem in CrewMux
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug.
+
+        Please provide as much concrete detail as possible. Korean or English is fine.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What is broken?
+      placeholder: A short description of the bug.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: CrewMux Version
+      description: Output of `crewmux --version`
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: install_method
+    attributes:
+      label: Install Method
+      options:
+        - Homebrew stable
+        - Homebrew --HEAD
+        - install.sh
+        - Built from source
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Agent Provider
+      description: Select the provider involved in the issue, if applicable.
+      multiple: true
+      options:
+        - Claude
+        - Codex
+        - Both
+        - Not provider-specific
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, shell, tmux version, and anything relevant
+      placeholder: "macOS 15, zsh, tmux 3.5a"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Provide the exact sequence that reproduces the bug.
+      placeholder: |
+        1. Run `crewmux team start`
+        2. Open the dashboard
+        3. Spawn a Codex worker
+        4. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs or Screenshots
+      description: Paste terminal output, dashboard errors, or screenshots if available.
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Preflight
+      options:
+        - label: I searched existing issues first.
+          required: true
+        - label: I can reproduce this on the latest main or latest stable release.
+          required: false
+        - label: I removed secrets, tokens, and private data from logs/screenshots.
+          required: true

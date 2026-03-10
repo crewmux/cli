@@ -8,7 +8,7 @@ mod web;
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
-#[command(about = "CrewMux", version)]
+#[command(name = "crewmux", about = "CrewMux", version)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
