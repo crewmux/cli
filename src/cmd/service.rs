@@ -7,7 +7,7 @@ const LABEL: &str = "com.crewmux.web";
 
 fn plist_path() -> PathBuf {
     dirs::home_dir()
-        .unwrap()
+        .expect("Cannot determine home directory. Is $HOME set?")
         .join("Library/LaunchAgents")
         .join(format!("{}.plist", LABEL))
 }
@@ -17,7 +17,17 @@ fn cm_binary_path() -> Result<PathBuf> {
 }
 
 fn log_dir() -> PathBuf {
-    dirs::home_dir().unwrap().join(".crewmux/service")
+    dirs::home_dir()
+        .expect("Cannot determine home directory. Is $HOME set?")
+        .join(".crewmux/service")
+}
+
+fn xml_escape(s: &str) -> String {
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+        .replace('\'', "&apos;")
 }
 
 pub fn install() -> Result<()> {
@@ -58,9 +68,14 @@ pub fn install() -> Result<()> {
 </dict>
 </plist>"#,
         label = LABEL,
-        bin = bin.display(),
-        logs = logs.display(),
-        home = dirs::home_dir().unwrap().display(),
+        bin = xml_escape(&bin.display().to_string()),
+        logs = xml_escape(&logs.display().to_string()),
+        home = xml_escape(
+            &dirs::home_dir()
+                .expect("Cannot determine home directory")
+                .display()
+                .to_string()
+        ),
     );
 
     fs::write(&plist, content)?;
@@ -89,7 +104,7 @@ pub fn install() -> Result<()> {
         println!("  Logs:       {}", logs.display().to_string().dimmed());
         println!();
         println!("  Starts automatically on login.");
-        println!("  Uninstall:  {}", "cm uninstall".bold());
+        println!("  Uninstall:  {}", "crewmux uninstall".bold());
     } else {
         println!("{}", "Failed to load service.".red());
     }

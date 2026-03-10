@@ -7,8 +7,8 @@ use std::path::PathBuf;
 
 const TEAM_DIR_NAME: &str = ".crewmux";
 const LEGACY_TEAM_DIR_NAME: &str = ".ai-team";
-const SESSION_PREFIX: &str = "cm";
-const LEGACY_SESSION_PREFIX: &str = "ai";
+const SESSION_PREFIX: &str = "crewmux";
+const LEGACY_SESSION_PREFIXES: [&str; 2] = ["cm", "ai"];
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TeamMeta {
@@ -43,11 +43,15 @@ pub struct WorkerMeta {
 
 /// ~/.crewmux
 pub fn team_dir() -> PathBuf {
-    dirs::home_dir().unwrap().join(TEAM_DIR_NAME)
+    dirs::home_dir()
+        .expect("Cannot determine home directory. Is $HOME set?")
+        .join(TEAM_DIR_NAME)
 }
 
 pub fn legacy_team_dir() -> PathBuf {
-    dirs::home_dir().unwrap().join(LEGACY_TEAM_DIR_NAME)
+    dirs::home_dir()
+        .expect("Cannot determine home directory. Is $HOME set?")
+        .join(LEGACY_TEAM_DIR_NAME)
 }
 
 pub fn logs_dir() -> PathBuf {
@@ -66,10 +70,6 @@ pub fn session_name(dir: &str) -> String {
     format!("{}-{}", SESSION_PREFIX, session_basename(dir))
 }
 
-pub fn legacy_session_name(dir: &str) -> String {
-    format!("{}-{}", LEGACY_SESSION_PREFIX, session_basename(dir))
-}
-
 pub fn resolve_session_name(dir: &str) -> String {
     for session in session_candidates(dir) {
         if tmux::has_session(&session) {
@@ -80,7 +80,8 @@ pub fn resolve_session_name(dir: &str) -> String {
 }
 
 pub fn resolve_session_name_cwd() -> String {
-    let cwd = std::env::current_dir().unwrap();
+    let cwd =
+        std::env::current_dir().expect("Cannot determine current directory. Has it been deleted?");
     resolve_session_name(&cwd.to_string_lossy())
 }
 
@@ -99,11 +100,27 @@ fn session_basename(dir: &str) -> String {
         .file_name()
         .map(|s| s.to_string_lossy().to_string())
         .unwrap_or_else(|| "project".into());
-    base.replace([' ', '.'], "-")
+    base.replace([' ', '.', ':', '\'', '"'], "-")
 }
 
-fn session_candidates(dir: &str) -> [String; 2] {
-    [session_name(dir), legacy_session_name(dir)]
+/// Validate that a session name is safe for filesystem and tmux use.
+pub fn is_valid_session_name(session: &str) -> bool {
+    !session.is_empty()
+        && session.len() <= 128
+        && session
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+}
+
+fn session_candidates(dir: &str) -> Vec<String> {
+    let base = session_basename(dir);
+    let mut candidates = vec![format!("{}-{}", SESSION_PREFIX, base)];
+    candidates.extend(
+        LEGACY_SESSION_PREFIXES
+            .iter()
+            .map(|prefix| format!("{}-{}", prefix, base)),
+    );
+    candidates
 }
 
 fn session_storage_root(session: &str) -> PathBuf {
@@ -193,13 +210,16 @@ pub fn resolve_pane(meta: &TeamMeta, target: &str) -> Option<String> {
     if let Some(w) = meta.workers.get(target) {
         return Some(w.pane.clone());
     }
-    // partial match
-    for (name, w) in &meta.workers {
-        if name.contains(target) {
-            return Some(w.pane.clone());
-        }
+    // partial match with ambiguity check
+    let mut matches = meta
+        .workers
+        .iter()
+        .filter(|(name, _)| name.contains(target));
+    let (_, w) = matches.next()?;
+    if matches.next().is_some() {
+        return None; // ambiguous
     }
-    None
+    Some(w.pane.clone())
 }
 
 /// Resolve a worker target to its canonical name and metadata.
@@ -295,7 +315,7 @@ fn recover_meta_from_tmux(session: &str) -> Result<TeamMeta> {
         }
 
         let title = pane.title.trim();
-        if title.is_empty() {
+        if title.is_empty() || title == "master" || title == "log" || !title.contains('-') {
             continue;
         }
 

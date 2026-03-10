@@ -41,7 +41,7 @@ pub async fn serve(port: u16) -> anyhow::Result<()> {
         .route("/api/browse", get(api_browse))
         .route("/api/recents", get(api_recents));
 
-    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port)).await?;
+    let listener = tokio::net::TcpListener::bind(format!("127.0.0.1:{}", port)).await?;
     eprintln!("CrewMux dashboard: http://localhost:{}", port);
     axum::serve(listener, app).await?;
     Ok(())
@@ -189,6 +189,13 @@ fn err400(e: impl std::fmt::Display) -> ApiError {
     (StatusCode::BAD_REQUEST, e.to_string())
 }
 
+fn validate_session_name(session: &str) -> Result<(), ApiError> {
+    if !meta::is_valid_session_name(session) {
+        return Err(err400("Invalid session name"));
+    }
+    Ok(())
+}
+
 // --- Session management ---
 
 async fn api_sessions() -> Json<Vec<SessionInfo>> {
@@ -270,14 +277,11 @@ async fn api_create_session(
     tmux::select_pane_title(&session, &log_pane_id, "log").map_err(err500)?;
 
     let log_file = meta::log_path(&session);
+    let log_quoted = shell_quote(&log_file.to_string_lossy());
     tmux::send_keys(
         &session,
         &log_pane_id,
-        &format!(
-            "touch '{}' && tail -f '{}'",
-            log_file.display(),
-            log_file.display()
-        ),
+        &format!("touch {} && tail -f {}", log_quoted, log_quoted),
     )
     .map_err(err500)?;
 
@@ -313,6 +317,7 @@ async fn api_create_session(
 async fn api_stop_session(
     axum::extract::Path(session): axum::extract::Path<String>,
 ) -> Result<Json<ApiResult>, ApiError> {
+    validate_session_name(&session)?;
     if tmux::has_session(&session) {
         tmux::kill_session(&session).map_err(err500)?;
     }
@@ -343,6 +348,7 @@ async fn api_stop_all() -> Result<Json<ApiResult>, ApiError> {
 async fn api_status(
     axum::extract::Path(session): axum::extract::Path<String>,
 ) -> Result<Json<StatusResponse>, ApiError> {
+    validate_session_name(&session)?;
     let m = meta::load_meta(&session).map_err(err404)?;
 
     let mut workers: Vec<AgentInfo> = m
@@ -377,6 +383,7 @@ async fn api_peek(
     axum::extract::Path((session, target)): axum::extract::Path<(String, String)>,
     Query(query): Query<PeekQuery>,
 ) -> Result<String, ApiError> {
+    validate_session_name(&session)?;
     let m = meta::load_meta(&session).map_err(err404)?;
     let lines = query.lines.unwrap_or(80);
 
@@ -514,13 +521,12 @@ async fn api_interrupt(Json(req): Json<InterruptRequest>) -> Result<Json<ApiResu
 async fn api_kill_workers(
     Json(req): Json<KillWorkersRequest>,
 ) -> Result<Json<ApiResult>, ApiError> {
-    let m = meta::load_meta(&req.session).map_err(err404)?;
+    let mut m = meta::load_meta(&req.session).map_err(err404)?;
 
     for w in m.workers.values() {
         tmux::kill_pane(&req.session, &w.pane).ok();
     }
 
-    let mut m = meta::load_meta(&req.session).map_err(err500)?;
     m.workers.clear();
     meta::save_meta(&req.session, &m).map_err(err500)?;
 
@@ -578,14 +584,25 @@ async fn api_open_terminal(
 // --- Directory browser ---
 
 async fn api_browse(Query(q): Query<BrowseQuery>) -> Result<Json<BrowseResult>, ApiError> {
-    let home = dirs::home_dir().unwrap().to_string_lossy().to_string();
+    let home = dirs::home_dir()
+        .ok_or_else(|| err500("Cannot determine home directory"))?
+        .to_string_lossy()
+        .to_string();
     let path = q.path.unwrap_or_else(|| home.clone());
 
     let canonical = std::fs::canonicalize(&path)
         .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid path: {}", e)))?;
     let current = canonical.to_string_lossy().to_string();
 
-    let parent = canonical.parent().map(|p| p.to_string_lossy().to_string());
+    // Restrict browsing to home directory
+    if !current.starts_with(&home) {
+        return Err(err400("Cannot browse outside home directory"));
+    }
+
+    let parent = canonical
+        .parent()
+        .map(|p| p.to_string_lossy().to_string())
+        .filter(|p| p.starts_with(&home));
 
     let is_git = canonical.join(".git").is_dir();
 
@@ -618,6 +635,10 @@ async fn api_browse(Query(q): Query<BrowseQuery>) -> Result<Json<BrowseResult>, 
         dirs,
         is_git,
     }))
+}
+
+fn shell_quote(value: &str) -> String {
+    format!("'{}'", value.replace('\'', r#"'"'"'"#))
 }
 
 async fn api_recents() -> Json<Vec<String>> {

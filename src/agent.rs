@@ -116,7 +116,9 @@ fn ensure_codex_project_trusted(project_dir: &str) -> Result<()> {
 }
 
 fn codex_config_path() -> PathBuf {
-    dirs::home_dir().unwrap().join(".codex/config.toml")
+    dirs::home_dir()
+        .expect("Cannot determine home directory. Is $HOME set?")
+        .join(".codex/config.toml")
 }
 
 fn project_header(project_dir: &str) -> String {
@@ -185,5 +187,7 @@ fn ensure_claude_project_trusted(project_dir: &str) -> Result<()> {
 }
 
 fn claude_config_path() -> PathBuf {
-    dirs::home_dir().unwrap().join(".claude.json")
+    dirs::home_dir()
+        .expect("Cannot determine home directory. Is $HOME set?")
+        .join(".claude.json")
 }

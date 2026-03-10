@@ -2,11 +2,11 @@
 
 ## 개요
 
-`cm`은 tmux를 런타임으로 삼고, 파일시스템의 `meta.json`을 상태 저장소로 쓰는 단일 Rust 바이너리입니다. `ai`는 호환용 별칭입니다. CLI, 웹 UI, 백그라운드 서비스가 모두 같은 메타데이터와 tmux 세션을 바라보므로 별도 DB나 서버 사이드 상태가 없습니다.
+`crewmux`는 tmux를 런타임으로 삼고, 파일시스템의 `meta.json`을 상태 저장소로 쓰는 단일 Rust 바이너리입니다. `cm`, `ai`는 호환용 별칭입니다. CLI, 웹 UI, 백그라운드 서비스가 모두 같은 메타데이터와 tmux 세션을 바라보므로 별도 DB나 서버 사이드 상태가 없습니다.
 
 ```text
 ┌──────────────────────────────────────────────┐
-│ cm (single binary)                          │
+│ crewmux (single binary)                    │
 │  ├─ team  -> tmux session lifecycle         │
 │  ├─ task  -> worker spawn + dispatch        │
 │  ├─ ctl   -> inspect / send / interrupt     │
@@ -22,10 +22,10 @@
 
 ### 1. 팀 시작
 
-`cm team start`는 아래 순서로 동작합니다.
+`crewmux team start`는 아래 순서로 동작합니다.
 
 1. 프로젝트 디렉토리 canonicalize
-2. 세션 이름 계산: `cm-<basename>`
+2. 세션 이름 계산: `crewmux-<basename>`
 3. tmux 세션 생성
 4. `master` pane title 설정 후 선택된 provider 실행
 5. `log` pane 생성 후 로그 tail
@@ -35,7 +35,7 @@
 
 ### 2. 워커 스폰
 
-`cm task spawn` 또는 `POST /api/spawn`은 아래를 수행합니다.
+`crewmux task spawn` 또는 `POST /api/spawn`은 아래를 수행합니다.
 
 1. 현재 메타데이터 로드
 2. 다음 worker 이름 계산 (`claude-1`, `codex-1` ...)
@@ -141,7 +141,7 @@ window 1: team
 - master는 기본 conflict-avoidance prompt를 사용하며, 사용자가 `~/.crewmux/master-prompt.md`를 수정해 override할 수 있습니다
 - 예전 기본 prompt는 `.legacy.bak`로 백업 후 최신 템플릿으로 교체됩니다
 - 서비스 설치는 macOS `launchd`만 지원합니다
-- `stop-all`은 이름이 `cm-` 또는 legacy `ai-`로 시작하는 tmux 세션 전체를 대상으로 합니다
+- `stop-all`은 이름이 `crewmux-` 또는 legacy `cm-`, `ai-`로 시작하는 tmux 세션 전체를 대상으로 합니다
 - API와 CLI 모두 tmux가 실제 상태 저장소 역할을 하기 때문에, pane을 외부에서 수동 조작하면 메타데이터와 어긋날 수 있습니다
 
 ## 확장 포인트

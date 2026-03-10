@@ -55,7 +55,7 @@ pub fn run(action: TaskAction) -> Result<()> {
 fn ensure_session() -> Result<String> {
     let session = meta::resolve_session_name_cwd();
     if !tmux::has_session(&session) {
-        bail!("No active team session. Run 'cm team start' first.");
+        bail!("No active team session. Run 'crewmux team start' first.");
     }
     Ok(session)
 }
@@ -67,26 +67,17 @@ fn spawn_worker(
     model: &Option<String>,
     project_dir: &str,
 ) -> Result<String> {
-    let m = meta::load_meta(session)?;
-    let master_pane = &m.master.pane;
+    let mut m = meta::load_meta(session)?;
+    let master_pane = m.master.pane.clone();
 
-    let wpane_id = tmux::split_window_horizontal(session, master_pane, project_dir)?;
+    let wpane_id = tmux::split_window_horizontal(session, &master_pane, project_dir)?;
 
     tmux::select_pane_title(session, &wpane_id, name)?;
 
     let cmd = agent::build_cli_command(worker_type, model, project_dir, false)?;
     tmux::send_keys(session, &wpane_id, &cmd)?;
 
-    // Re-tile layout
-    let worker_count = m.workers.len();
-    if worker_count < 2 {
-        tmux::select_layout(session, "main-vertical")?;
-    } else {
-        tmux::select_layout(session, "tiled")?;
-    }
-
-    // Update meta
-    let mut m = meta::load_meta(session)?;
+    // Update meta first so layout decision uses correct count
     m.workers.insert(
         name.to_string(),
         meta::WorkerMeta {
@@ -97,12 +88,19 @@ fn spawn_worker(
     );
     meta::save_meta(session, &m)?;
 
+    // Re-tile layout based on updated worker count
+    if m.workers.len() <= 2 {
+        tmux::select_layout(session, "main-vertical")?;
+    } else {
+        tmux::select_layout(session, "tiled")?;
+    }
+
     Ok(wpane_id)
 }
 
 fn cmd_spawn(worker_type: String, model: Option<String>, count: u32, task: String) -> Result<()> {
     if task.is_empty() {
-        bail!("Task message is required. Usage: cm task spawn -t codex -m gpt-5.3-codex \"your task\"");
+        bail!("Task message is required. Usage: crewmux task spawn -t codex -m gpt-5.3-codex \"your task\"");
     }
 
     let session = ensure_session()?;
@@ -180,20 +178,19 @@ fn cmd_send(target: String, message: String) -> Result<()> {
             meta::append_log(&session, &format!("DIRECT [{}] {}", target, message))?;
             println!("{}", format!("Sent to {}.", target).green());
         }
-        None => bail!("Unknown target: {}. Use 'cm ctl roles'.", target),
+        None => bail!("Unknown target: {}. Use 'crewmux ctl roles'.", target),
     }
     Ok(())
 }
 
 fn cmd_clean() -> Result<()> {
     let session = ensure_session()?;
-    let m = meta::load_meta(&session)?;
+    let mut m = meta::load_meta(&session)?;
 
     for w in m.workers.values() {
         tmux::kill_pane(&session, &w.pane)?;
     }
 
-    let mut m = meta::load_meta(&session)?;
     m.workers.clear();
     meta::save_meta(&session, &m)?;
     meta::append_log(&session, "CLEANUP workers")?;

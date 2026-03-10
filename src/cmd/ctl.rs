@@ -62,7 +62,7 @@ pub fn run(action: CtlAction) -> Result<()> {
 fn ensure_session() -> Result<String> {
     let session = meta::resolve_session_name_cwd();
     if !tmux::has_session(&session) {
-        bail!("No active team session. Run 'cm team start' first.");
+        bail!("No active team session. Run 'crewmux team start' first.");
     }
     Ok(session)
 }
@@ -99,7 +99,7 @@ fn cmd_status() -> Result<()> {
         println!();
         println!(
             "  {}",
-            "No workers spawned yet. Use 'cm task spawn' to dispatch.".dimmed()
+            "No workers spawned yet. Use 'crewmux task spawn' to dispatch.".dimmed()
         );
     } else {
         println!();
@@ -120,9 +120,18 @@ fn cmd_status() -> Result<()> {
 
     println!();
     println!("{}", "─".repeat(50).dimmed());
-    println!("  {} <name> \"msg\"   Send to agent", "cm ctl send".bold());
-    println!("  {} <name>          View output", "cm ctl peek".bold());
-    println!("  {}                List all agents", "cm ctl roles".bold());
+    println!(
+        "  {} <name> \"msg\"   Send to agent",
+        "crewmux ctl send".bold()
+    );
+    println!(
+        "  {} <name>          View output",
+        "crewmux ctl peek".bold()
+    );
+    println!(
+        "  {}                List all agents",
+        "crewmux ctl roles".bold()
+    );
 
     Ok(())
 }
@@ -161,7 +170,7 @@ fn cmd_roles() -> Result<()> {
 
 fn cmd_send(target: String, message: String) -> Result<()> {
     if message.is_empty() {
-        bail!("Usage: cm ctl send <name> \"message\"");
+        bail!("Usage: crewmux ctl send <name> \"message\"");
     }
     let session = ensure_session()?;
     let m = meta::load_meta(&session)?;
@@ -172,7 +181,7 @@ fn cmd_send(target: String, message: String) -> Result<()> {
             meta::append_log(&session, &format!("REMOTE [{}] {}", target, message))?;
             println!("{}", format!("Sent to {}.", target).green());
         }
-        None => bail!("Unknown: {}. Use 'cm ctl roles'.", target),
+        None => bail!("Unknown: {}. Use 'crewmux ctl roles'.", target),
     }
     Ok(())
 }
@@ -217,7 +226,7 @@ fn cmd_log(follow: bool) -> Result<()> {
 
 fn cmd_broadcast(message: String) -> Result<()> {
     if message.is_empty() {
-        bail!("Usage: cm ctl broadcast \"msg\"");
+        bail!("Usage: crewmux ctl broadcast \"msg\"");
     }
     let session = ensure_session()?;
     let m = meta::load_meta(&session)?;
@@ -258,13 +267,12 @@ fn cmd_interrupt(target: String) -> Result<()> {
 
 fn cmd_kill_workers() -> Result<()> {
     let session = ensure_session()?;
-    let m = meta::load_meta(&session)?;
+    let mut m = meta::load_meta(&session)?;
 
     for w in m.workers.values() {
         tmux::kill_pane(&session, &w.pane)?;
     }
 
-    let mut m = meta::load_meta(&session)?;
     m.workers.clear();
     meta::save_meta(&session, &m)?;
 

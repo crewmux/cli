@@ -209,7 +209,7 @@ pub fn list_sessions_raw() -> Result<Vec<String>> {
     match tmux(&["list-sessions", "-F", "#S"]) {
         Ok(out) => Ok(out
             .lines()
-            .filter(|l| l.starts_with("cm-") || l.starts_with("ai-"))
+            .filter(|l| l.starts_with("crewmux-") || l.starts_with("cm-") || l.starts_with("ai-"))
             .map(String::from)
             .collect()),
         Err(_) => Ok(vec![]),
@@ -221,7 +221,11 @@ fn shell_quote(value: &str) -> String {
 }
 
 fn applescript_escape(value: &str) -> String {
-    value.replace('\\', "\\\\").replace('"', "\\\"")
+    value
+        .replace('\\', "\\\\")
+        .replace('"', "\\\"")
+        .replace('\n', "\\n")
+        .replace('\r', "\\r")
 }
 
 fn pane_target(session: &str, pane: &str) -> String {

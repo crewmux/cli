@@ -104,14 +104,11 @@ fn cmd_start(dir: Option<String>, master_type: String, master_model: Option<Stri
     tmux::select_pane_title(&session, &log_pane_id, "log")?;
 
     let log_file = meta::log_path(&session);
+    let log_quoted = shell_quote(&log_file.to_string_lossy());
     tmux::send_keys(
         &session,
         &log_pane_id,
-        &format!(
-            "touch '{}' && tail -f '{}'",
-            log_file.display(),
-            log_file.display()
-        ),
+        &format!("touch {} && tail -f {}", log_quoted, log_quoted),
     )?;
 
     // Save metadata
@@ -147,11 +144,11 @@ fn cmd_start(dir: Option<String>, master_type: String, master_model: Option<Stri
     println!();
     println!(
         "  {} \"your task\"    Spawn workers",
-        "cm task spawn".bold()
+        "crewmux task spawn".bold()
     );
     println!(
         "  {}               Check team status",
-        "cm ctl status".bold()
+        "crewmux ctl status".bold()
     );
     println!();
 
@@ -221,7 +218,14 @@ fn cmd_attach(dir: Option<String>) -> Result<()> {
     if tmux::has_session(&session) {
         tmux::attach(&session)?;
     } else {
-        println!("{}", "No active session. Run 'cm team start' first.".red());
+        println!(
+            "{}",
+            "No active session. Run 'crewmux team start' first.".red()
+        );
     }
     Ok(())
+}
+
+fn shell_quote(value: &str) -> String {
+    format!("'{}'", value.replace('\'', r#"'"'"'"#))
 }
