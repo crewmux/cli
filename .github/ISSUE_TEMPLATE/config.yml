@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Usage and Setup Docs
+    url: https://github.com/crewmux/cli#readme
+    about: Read the README, getting started guide, and CLI reference before filing a support issue.
+  - name: Troubleshooting Guide
+    url: https://github.com/crewmux/cli/blob/main/docs/troubleshooting.md
+    about: Check known failure modes for install, dashboard, tmux, and agent runtime issues.
